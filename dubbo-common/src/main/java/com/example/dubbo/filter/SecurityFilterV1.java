@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-@Activate(group = "provider", order = -1000)
+@Activate
 public class SecurityFilterV1 implements Filter, RestExtension {
 
     public SecurityFilterV1() {
