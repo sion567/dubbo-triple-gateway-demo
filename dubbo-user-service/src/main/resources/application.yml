@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: dubbo-user-service
+  cloud:
+    nacos:
+      username: nacos
+      password: nacos
+      discovery:
+        server-addr: 192.168.40.237:8848
+
+dubbo:
+  application:
+    name: dubbo-user-service
+    logger: slf4j
+    qos-port: 22222
+  protocol:
+    name: dubbo
+    port: 20882
+    ext-protocol: tri
+  scan:
+    base-packages: com.example.dubbo.user
+  registry:
+    address: nacos://${nacos.address:192.168.40.237}:8848?username=nacos&password=nacos

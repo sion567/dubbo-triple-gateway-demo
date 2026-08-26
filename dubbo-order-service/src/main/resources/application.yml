@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: dubbo-order-service
+  cloud:
+    nacos:
+      username: nacos
+      password: nacos
+      discovery:
+        server-addr: 192.168.40.237:8848
+
+dubbo:
+  application:
+    name: dubbo-order-service
+    logger: slf4j
+    qos-enable: false
+  protocol:
+    name: dubbo        # 主协议：服务间调用使用 dubbo
+    port: 20881
+    ext-protocol: tri  # 扩展协议：同端口额外支持 triple，供 gateway 调用
+  scan:
+    base-packages: com.example.dubbo.order
+  registry:
+    address: nacos://${nacos.address:192.168.40.237}:8848?username=nacos&password=nacos
+    register-mode: instance  # 只注册应用级，不注册接口级
+
+
+
+##############双注册#############################
+# Nacos 中的服务名	类型	说明
+# providers:com.example.dubbo.api.OrderService::	接口级地址	Dubbo2 兼容模式，按接口名注册
+# dubbo-order-service	应用级地址	Dubbo3 新模式，按应用名注册

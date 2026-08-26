@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: dubbo-gateway
+  cloud:
+    nacos:
+      username: nacos
+      password: nacos
+      discovery:
+        server-addr: 192.168.40.237:8848
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: user_service_route
+              uri: lb://dubbo-user-service
+              predicates:
+                - Path=/user/**
+
+            - id: order_service_route
+              uri: lb://dubbo-order-service
+              predicates:
+                - Path=/order/**
+
+server:
+  port: 7788
+
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.cloud.loadbalancer: DEBUG
+    org.springframework.web.reactive: DEBUG
