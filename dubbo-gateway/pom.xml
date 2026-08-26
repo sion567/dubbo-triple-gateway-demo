@@ -16,6 +16,9 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-gateway</artifactId>
+            <!--
+            <artifactId>spring-cloud-gateway-server-webflux</artifactId>
+            -->
         </dependency>
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
@@ -25,5 +28,11 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-spring-boot-starter</artifactId>
+        </dependency>
+
     </dependencies>
 </project>

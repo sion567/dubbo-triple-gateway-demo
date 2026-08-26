@@ -6,6 +6,9 @@ info:
 http:
   method: GET
   url: http://localhost:7788/order/getOrder?id=101
+  headers:
+    - name: Authorization
+      value: Bearer valid-mock-token
   params:
     - name: id
       value: "101"

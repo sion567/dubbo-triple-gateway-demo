@@ -15,6 +15,7 @@
         <module>dubbo-order-service</module>
         <module>dubbo-user-service</module>
         <module>dubbo-gateway</module>
+        <module>dubbo-common</module>
     </modules>
 
     <properties>

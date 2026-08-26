@@ -47,6 +47,13 @@ public class UserServiceImpl implements UserService {
         result.put("name", name);
 
         // 2. 🔑 调用订单服务获取订单列表（服务间链式调用）
+//    消费端 @DubboReference(protocol = "dubbo")
+//    ↓
+//    走 Dubbo TCP 协议直接调用接口方法
+//    ↓
+//    Spring Web 注解被完全忽略
+//    ↓
+//    直接调用 getOrderById(Long orderId) 方法
         try {
             List<Map<String, Object>> orders = orderService.getOrdersByUserId(userId);
             result.put("orders", orders);
