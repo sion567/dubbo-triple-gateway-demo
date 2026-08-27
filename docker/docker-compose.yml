@@ -1,4 +1,32 @@
 services:
+  # ---------------- SkyWalking 链路追踪 ----------------
+  skywalking-oap:
+    image: apache/skywalking-oap-server:10.1.0
+    container_name: demo-skywalking-oap
+    environment:
+      # sample 用 H2 内存存储，重启即清；生产换 Elasticsearch/BanyanDB
+      SW_STORAGE: h2
+      SW_HEALTH_CHECKER: default
+      JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - "11800:11800"   # gRPC，Java Agent 上报端口
+      - "12800:12800"   # REST，UI 查询端口
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:12800/healthcheck || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+
+  skywalking-ui:
+    image: apache/skywalking-ui:10.1.0
+    container_name: demo-skywalking-ui
+    depends_on:
+      - skywalking-oap
+    environment:
+      SW_OAP_ADDRESS: http://skywalking-oap:12800
+    ports:
+      - "8090:8080"     # 浏览器访问 http://localhost:8090（8080 已被 nacos 控制台占用）
+
   nacos:
     image: nacos/nacos-server:v3.2.4-slim
     container_name: demo-nacos

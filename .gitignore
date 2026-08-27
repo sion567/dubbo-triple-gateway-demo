@@ -33,6 +33,10 @@ desktop.ini
 cp.txt
 application-local.yml
 
+# ---- SkyWalking Agent（脚本下载，不入库） ----
+skywalking-agent/
+sw-agent.tar.gz
+
 # ---- Node / frontend ----
 node_modules/
 frontend/dist/

@@ -1,6 +1,7 @@
 package com.example.dubbo.security;
 
 import io.seata.core.context.RootContext;
+import org.apache.skywalking.apm.toolkit.trace.Trace;
 import org.apache.dubbo.common.constants.CommonConstants;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.Filter;
@@ -22,6 +23,7 @@ public class ContextPropagationConsumerFilter implements Filter {
     public static final String AUTH_KEY = "ctx-authorization";
 
     @Override
+    @Trace(operationName = "ContextPropagationConsumer")
     public Result invoke(Invoker<?> invoker, Invocation invocation) {
         String xid = RootContext.getXID();
         if (xid != null) {

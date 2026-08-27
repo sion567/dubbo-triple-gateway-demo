@@ -2,6 +2,7 @@ package com.example.dubbo.security;
 
 import io.jsonwebtoken.Claims;
 import io.seata.core.context.RootContext;
+import org.apache.skywalking.apm.toolkit.trace.Trace;
 import org.apache.dubbo.common.constants.CommonConstants;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.Filter;
@@ -33,6 +34,7 @@ public class ContextPropagationProviderFilter implements Filter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     @Override
+    @Trace(operationName = "ContextPropagationProvider")
     public Result invoke(Invoker<?> invoker, Invocation invocation) {
         // ---- XID ----
         String xid = invocation.getAttachment(ContextPropagationConsumerFilter.XID_KEY);
