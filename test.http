@@ -96,3 +96,30 @@ Content-Type: application/json
 GET http://localhost:7788/order/admin/allOrders
 Authorization: Bearer {{adminToken}}
 
+
+### 12. 秒杀下单 - RocketMQ 削峰填谷（立即返回排队中，消费者异步执行 Seata 事务）
+POST http://localhost:7788/order/quickOrder
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "productCode": "iPhone15",
+  "product": "iPhone 15",
+  "count": 1,
+  "price": 6999.0
+}
+
+### 13. 秒杀下单（回滚场景）- status=FAIL，消费端 Seata 全局回滚
+POST http://localhost:7788/order/quickOrder
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "productCode": "iPhone15",
+  "product": "iPhone 15",
+  "count": 1,
+  "price": 6999.0,
+  "status": "FAIL"
+}

@@ -27,6 +27,13 @@ public interface OrderService {
     @GetMapping("/list")
     List<Map<String, Object>> list();
 
+    /**
+     * 秒杀/削峰下单：请求写入 RocketMQ 后立即返回"排队中"，
+     * 由消费者异步执行真正的下单（Seata 全局事务）。
+     */
+    @PostMapping("/quickOrder")
+    Map<String, Object> quickOrder(@RequestBody OrderDTO order);
+
     /** 更新订单状态（管理员） */
     @PostMapping("/updateStatus")
     Map<String, Object> updateStatus(@RequestBody Map<String, Object> body);

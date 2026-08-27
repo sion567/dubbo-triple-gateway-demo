@@ -71,6 +71,13 @@ logging:
     "org.apache.dubbo.rpc.protocol.tri": debug
     "org.apache.dubbo.remoting": debug
 
+# RocketMQ：削峰填谷（quickOrder 入队，QuickOrderConsumer 异步消费）
+rocketmq:
+  name-server: ${rocketmq.namesrv:localhost:9876}
+  producer:
+    group: order-producer-group
+    send-message-timeout: 5000
+
 management:
   server:
     port: 9001            # 管理端点独立端口，与 dubbo(20881)/tri 业务端口隔离

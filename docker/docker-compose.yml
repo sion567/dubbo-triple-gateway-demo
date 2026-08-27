@@ -1,4 +1,29 @@
 services:
+  # ---------------- RocketMQ 消息队列（削峰填谷） ----------------
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.1
+    container_name: demo-rocketmq-namesrv
+    command: sh mqnamesrv
+    environment:
+      JAVA_OPT_EXT: "-Xms256m -Xmx256m"
+    ports:
+      - "9876:9876"
+
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.1
+    container_name: demo-rocketmq-broker
+    depends_on:
+      - rocketmq-namesrv
+    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/conf/broker.conf
+    environment:
+      JAVA_OPT_EXT: "-Xms256m -Xmx512m"
+    ports:
+      - "10909:10909"   # VIP channel
+      - "10911:10911"   # 主端口
+      - "10912:10912"
+    volumes:
+      - ./rocketmq/broker.conf:/home/rocketmq/conf/broker.conf:ro
+
   # ---------------- SkyWalking 链路追踪 ----------------
   skywalking-oap:
     image: apache/skywalking-oap-server:10.1.0

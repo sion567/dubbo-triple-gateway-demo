@@ -3,7 +3,10 @@
     <template #header>
       <div class="card-header">
         <span>订单管理</span>
-        <el-button type="primary" @click="dialog = true">下单</el-button>
+        <div>
+          <el-button type="warning" @click="quickOrder">⚡ 秒杀下单（MQ 削峰）</el-button>
+          <el-button type="primary" @click="dialog = true">下单</el-button>
+        </div>
       </div>
     </template>
 
@@ -99,6 +102,13 @@ async function save() {
   } finally {
     saving.value = false
   }
+}
+
+// 秒杀：请求进 RocketMQ 立即返回，由消费者异步完成真正的下单（Seata 事务）
+async function quickOrder() {
+  const res = await request.post('/order/quickOrder', { ...form, status: 'OK' })
+  ElMessage.success(res.message + '（queueKey: ' + res.queueKey + '）')
+  setTimeout(load, 2000)  // 2 秒后刷新，通常消费者已完成
 }
 
 async function setStatus(row, status) {

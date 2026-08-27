@@ -2,14 +2,9 @@ package com.example.dubbo.order;
 
 import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.example.dubbo.api.AccountService;
 import com.example.dubbo.api.OrderService;
-import com.example.dubbo.api.StorageService;
 import com.example.dubbo.api.vo.OrderDTO;
 import com.example.dubbo.order.mapper.OrderMapper;
-import io.seata.core.context.RootContext;
-import io.seata.spring.annotation.GlobalTransactional;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
 import java.util.*;
 
@@ -20,15 +15,14 @@ public class OrderServiceImpl implements OrderService {
     private final Map<Long, List<Map<String, Object>>> orderDb = new HashMap<>();
 
     private final OrderMapper orderMapper;
+    private final OrderTxService orderTxService;
+    private final QuickOrderProducer quickOrderProducer;
 
-    @DubboReference(protocol = "dubbo")
-    private AccountService accountService;
-
-    @DubboReference(protocol = "dubbo")
-    private StorageService storageService;
-
-    public OrderServiceImpl(OrderMapper orderMapper) {
+    public OrderServiceImpl(OrderMapper orderMapper, OrderTxService orderTxService,
+                            QuickOrderProducer quickOrderProducer) {
         this.orderMapper = orderMapper;
+        this.orderTxService = orderTxService;
+        this.quickOrderProducer = quickOrderProducer;
         // 用户1的订单
         orderDb.put(1L, Arrays.asList(
                 Map.of("orderId", 101L, "product", "iPhone 15", "price", 6999.0, "status", "已发货"),
@@ -92,34 +86,20 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('USER')")
-    @GlobalTransactional(name = "create-order", rollbackFor = Exception.class)
     public String createOrder(OrderDTO order) {
-        System.out.println("🚀 [OrderService] 全局事务开始, XID = " + RootContext.getXID());
+        // 事务逻辑在 OrderTxService（REST 与 MQ 消费者共用）
+        return orderTxService.doCreate(order);
+    }
 
-        int count = order.getCount() == null ? 1 : order.getCount();
-        double money = order.getPrice() == null ? 0.0 : order.getPrice() * count;
-
-        // 1. 写订单（本地分支事务，Seata 代理数据源自动注册分支 + 记录 undo_log）
-        orderMapper.insert(order.getUserId(), order.getProductCode(),
-                order.getProduct(), count, money, "INIT");
-        System.out.println("📦 [OrderService] 订单已写入 seata_order.orders");
-
-        // 2. RPC 扣余额（XID+token 由 ContextPropagationConsumerFilter 自动透传）
-        accountService.debit(order.getUserId(), money);
-        System.out.println("💰 [OrderService] 已调用账户扣款 " + money + " 元");
-
-        // 3. RPC 扣库存
-        storageService.deduct(order.getProductCode(), count);
-        System.out.println("📉 [OrderService] 已调用库存扣减 " + count + " 件");
-
-        // 模拟下单失败，验证全局回滚
-        if ("FAIL".equalsIgnoreCase(order.getStatus())) {
-            throw new RuntimeException("模拟下单失败，全局事务回滚");
-        }
-
-        orderMapper.updateStatus(order.getUserId(), "SUCCESS");
-        System.out.println("✅ [OrderService] 全局事务提交前业务完成");
-        return "下单成功, XID=" + RootContext.getXID();
+    /**
+     * 秒杀/削峰下单：请求进 RocketMQ 立即返回，消费者异步执行真正的下单。
+     */
+    @Override
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('USER')")
+    public Map<String, Object> quickOrder(OrderDTO order) {
+        String key = quickOrderProducer.send(order);
+        System.out.println("⚡ [OrderService] 下单请求已入队: key=" + key);
+        return Map.of("code", 0, "message", "排队中，请稍后刷新查看结果", "queueKey", key);
     }
 
     /**
