@@ -1,9 +1,13 @@
 package com.example.dubbo.order;
 
-import com.example.dubbo.api.AccountService;
-import com.example.dubbo.api.StorageService;
 import com.example.dubbo.api.vo.OrderDTO;
 import com.example.dubbo.order.mapper.OrderMapper;
+import com.example.proto.AccountProtoService;
+import com.example.proto.DebitRequest;
+import com.example.proto.DebitResponse;
+import com.example.proto.DeductRequest;
+import com.example.proto.DeductResponse;
+import com.example.proto.StorageProtoService;
 import io.seata.core.context.RootContext;
 import io.seata.spring.annotation.GlobalTransactional;
 import org.apache.dubbo.config.annotation.DubboReference;
@@ -18,11 +22,12 @@ public class OrderTxService {
 
     private final OrderMapper orderMapper;
 
-    @DubboReference(protocol = "dubbo")
-    private AccountService accountService;
+    // IDL(Protobuf) 模式的内部 RPC：Triple 二进制协议，方法为普通返回值风格
+    @DubboReference
+    private AccountProtoService accountProtoService;
 
-    @DubboReference(protocol = "dubbo")
-    private StorageService storageService;
+    @DubboReference
+    private StorageProtoService storageProtoService;
 
     public OrderTxService(OrderMapper orderMapper) {
         this.orderMapper = orderMapper;
@@ -43,11 +48,19 @@ public class OrderTxService {
                 order.getProduct(), count, money, "INIT");
         System.out.println("📦 [OrderTxService] 订单已写入 seata_order.orders");
 
-        accountService.debit(order.getUserId(), money);
-        System.out.println("💰 [OrderTxService] 已调用账户扣款 " + money + " 元");
+        DebitResponse debit = accountProtoService.debit(DebitRequest.newBuilder()
+                .setUserId(order.getUserId()).setMoney(money).build());
+        if (!debit.getSuccess()) {
+            throw new RuntimeException(debit.getMessage());  // 触发 Seata 全局回滚
+        }
+        System.out.println("💰 [OrderTxService] 已调用账户扣款 " + money + " 元, 剩余=" + debit.getRemaining());
 
-        storageService.deduct(order.getProductCode(), count);
-        System.out.println("📉 [OrderTxService] 已调用库存扣减 " + count + " 件");
+        DeductResponse deduct = storageProtoService.deduct(DeductRequest.newBuilder()
+                .setProductCode(order.getProductCode()).setCount(count).build());
+        if (!deduct.getSuccess()) {
+            throw new RuntimeException(deduct.getMessage());  // 触发 Seata 全局回滚
+        }
+        System.out.println("📉 [OrderTxService] 已调用库存扣减 " + count + " 件, 剩余=" + deduct.getRemaining());
 
         if ("FAIL".equalsIgnoreCase(order.getStatus())) {
             throw new RuntimeException("模拟下单失败，全局事务回滚");

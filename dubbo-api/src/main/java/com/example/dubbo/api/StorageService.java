@@ -11,18 +11,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 库存服务（RM）：扣减库存，参与 Seata AT 全局事务；同时暴露 tri rest 端点给前端。
+ * 库存 REST 端点（tri rest, JSON）：给网关/前端用。
+ * 内部 RPC（扣库存扣减，参与 Seata 全局事务）已改为 IDL 模式：见 dubbo-proto-api 的 storage.proto。
  */
 @RequestMapping("/storage")
 public interface StorageService {
-
-    /**
-     * 扣减库存。库存不足时抛异常，触发全局回滚
-     *
-     * @param productCode 商品编码
-     * @param count       扣减数量
-     */
-    void deduct(String productCode, int count);
 
     /** 全量库存列表 */
     @GetMapping("/list")

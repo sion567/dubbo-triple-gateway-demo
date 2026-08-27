@@ -12,6 +12,7 @@
 
     <modules>
         <module>dubbo-api</module>
+        <module>dubbo-proto-api</module>
         <module>dubbo-common</module>
         <module>dubbo-order-service</module>
         <module>dubbo-user-service</module>

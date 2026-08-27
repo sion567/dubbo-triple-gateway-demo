@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_package = "com.example.proto";
+option java_multiple_files = true;
+option java_outer_classname = "StorageProto";
+
+// 库存内部 RPC（IDL 模式，Triple/protobuf）：order -> storage-service
+service StorageProtoService {
+
+  // 扣减库存；库存不足返回 success=false，由调用方决定抛异常触发 Seata 回滚
+  rpc Deduct(DeductRequest) returns (DeductResponse);
+}
+
+message DeductRequest {
+  string product_code = 1;
+  int32 count = 2;
+}
+
+message DeductResponse {
+  bool success = 1;
+  int32 remaining = 2;
+  string message = 3;
+}

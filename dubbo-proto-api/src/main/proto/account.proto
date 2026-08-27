@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_package = "com.example.proto";
+option java_multiple_files = true;
+option java_outer_classname = "AccountProto";
+
+// 账户内部 RPC（IDL 模式，Triple/protobuf）：order -> user-service
+service AccountProtoService {
+
+  // 扣减余额；余额不足返回 success=false，由调用方决定抛异常触发 Seata 回滚
+  rpc Debit(DebitRequest) returns (DebitResponse);
+}
+
+message DebitRequest {
+  int64 user_id = 1;
+  double money = 2;
+}
+
+message DebitResponse {
+  bool success = 1;
+  double remaining = 2;
+  string message = 3;
+}

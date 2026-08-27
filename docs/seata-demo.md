@@ -7,8 +7,8 @@ gateway (7788, HTTP)
    │
 order-service (TM + RM)  ── H2 内存库 seata_order（orders + undo_log）
    │ @GlobalTransactional 开启全局事务
-   ├──Dubbo RPC──> user-service (RM)    ── H2 内存库 seata_account（account + undo_log）扣余额
-   └──Dubbo RPC──> storage-service (RM) ── H2 内存库 seata_storage（storage + undo_log）扣库存
+   ├──IDL/Protobuf RPC(Triple)──> user-service (RM)    ── H2 内存库 seata_account（account + undo_log）扣余额
+   └──IDL/Protobuf RPC(Triple)──> storage-service (RM) ── H2 内存库 seata_storage（storage + undo_log）扣库存
 
 Seata Server (TC) 8091：注册到 Nacos（SEATA_GROUP / seata-server）
 ```
