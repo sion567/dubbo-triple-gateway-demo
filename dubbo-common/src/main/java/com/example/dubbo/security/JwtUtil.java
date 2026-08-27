@@ -16,6 +16,7 @@ import java.util.List;
 public final class JwtUtil {
 
     public static final String CLAIM_ROLES = "roles";
+    public static final String CLAIM_PERMS = "perms";
 
     private static final String SECRET = System.getenv().getOrDefault(
             "JWT_SECRET", "demo-jwt-secret-0123456789-abcdefghijklmnop");
@@ -25,15 +26,16 @@ public final class JwtUtil {
     private JwtUtil() {
     }
 
-    public static String createToken(String username, List<String> roles) {
-        return createToken(username, roles, DEFAULT_TTL_MILLIS);
+    public static String createToken(String username, List<String> roles, List<String> perms) {
+        return createToken(username, roles, perms, DEFAULT_TTL_MILLIS);
     }
 
-    public static String createToken(String username, List<String> roles, long ttlMillis) {
+    public static String createToken(String username, List<String> roles, List<String> perms, long ttlMillis) {
         long now = System.currentTimeMillis();
         return Jwts.builder()
                 .subject(username)
                 .claim(CLAIM_ROLES, roles)
+                .claim(CLAIM_PERMS, perms)
                 .issuedAt(new Date(now))
                 .expiration(new Date(now + ttlMillis))
                 .signWith(KEY)

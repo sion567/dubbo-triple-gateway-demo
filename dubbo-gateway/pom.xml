@@ -59,5 +59,17 @@
             <artifactId>dubbo-spring-boot-starter</artifactId>
         </dependency>
 
+        <!-- 网关统一认证：标准 Spring Security WebFlux（SecurityWebFilterChain） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <!-- JWT 验签工具（dubbo-common 的 JwtUtil，与下游共用同一密钥/算法） -->
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>dubbo-common</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
     </dependencies>
 </project>

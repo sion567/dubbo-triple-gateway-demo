@@ -24,7 +24,7 @@ mybatis:
 
 # Seata AT 模式客户端配置
 seata:
-  enabled: true
+  enabled: false
   application-id: ${spring.application.name}
   # 事务组名，需与服务端 service.vgroup-mapping 中配置的组一致
   tx-service-group: demo_tx_group
@@ -51,12 +51,13 @@ dubbo:
     logger: slf4j
     qos-enable: false
     check-serializable: false
-    serialize-check-status: DISABLE
+    serialize-check-status: DISABLE   # 开启白名单机制（serialize-check-status 设为 WARN 或 STRICT），明确只允许内部可信类的反序列化
   protocol:
     name: dubbo        # 主协议：服务间调用使用 dubbo
     port: 20881
     ext-protocol: tri  # 扩展协议：同端口额外支持 triple，供 gateway 调用
 #    extension: com.example.dubbo.filter.SecurityFilterV1
+    preferred-protocol: tri # 告诉消费端：如果你支持 tri，请优先用 tri 调用
   scan:
     base-packages: com.example.dubbo.order
   registry:

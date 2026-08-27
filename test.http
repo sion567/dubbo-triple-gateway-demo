@@ -1,10 +1,13 @@
 ### ============================================================
-### JWT 认证完整流程（IDEA HTTP Client）
+### 网关统一认证 + 令牌透传 + 方法级权限（IDEA HTTP Client）
 ### 前置：docker compose up -d（Nacos+Seata），启动 4 个服务
-### 账号：user/123456（ROLE_USER）、admin/admin123（ROLE_ADMIN）
+### 账号：user/123456（ROLE_USER, order:*）
+###       admin/admin123（ROLE_ADMIN, 含 system:dept:add）
+### 认证链路：gateway 验签 JWT -> X-User-Info 透传 -> Dubbo Provider
+###           重建 SecurityContext -> @PreAuthorize 鉴权
 ### ============================================================
 
-### 0. 健康检查（不需要 token）
+### 0. 白名单接口（gateway 直接放行，不需要 token）
 GET http://localhost:7788/user/getUser/1
 
 ### 1. 登录 - 普通用户，自动保存 token 到变量 userToken
@@ -21,7 +24,7 @@ Content-Type: application/json
     client.log("userToken saved: " + response.body.token);
 %}
 
-### 2. 登录 - 管理员，保存 adminToken
+### 2. 登录 - 管理员（有 system:dept:add 权限），保存 adminToken
 POST http://localhost:7788/user/login
 Content-Type: application/json
 
@@ -43,26 +46,26 @@ Content-Type: application/json
   "password": "wrong-password"
 }
 
-### 4. 无 token 访问订单接口（期望 401 Unauthorized: Missing token）
+### 4. 无 token 访问订单接口（期望 401，由 gateway JwtGlobalFilter 拒绝）
 GET http://localhost:7788/order/getOrder?id=101
 
-### 5. 伪造 token（期望 401 Invalid token）
+### 5. 伪造 token（期望 401，gateway 验签失败）
 GET http://localhost:7788/order/getOrder?id=101
 Authorization: Bearer fake.token.value
 
-### 6. 普通用户带 token 查订单（期望 200，返回订单）
+### 6. 普通用户带 token 查订单（期望 200；身份经 X-User-Info 透传到下游）
 GET http://localhost:7788/order/getOrder?id=101
 Authorization: Bearer {{userToken}}
 
-### 7. 普通用户访问管理端接口（期望 code=403，缺 ROLE_ADMIN）
+### 7. 普通用户访问管理端接口（期望被拒：无 system:dept:add 权限，@PreAuthorize 抛 AccessDenied）
 GET http://localhost:7788/order/admin/allOrders
 Authorization: Bearer {{userToken}}
 
-### 8. 管理员访问管理端接口（期望返回全部订单）
+### 8. 管理员访问管理端接口（期望返回全部订单，@PreAuthorize 校验通过）
 GET http://localhost:7788/order/admin/allOrders
 Authorization: Bearer {{adminToken}}
 
-### 9. 带token下单 - 正常提交（Seata 全局事务）
+### 9. 带token下单 - 正常提交（Seata 全局事务，需 ROLE_USER）
 POST http://localhost:7788/order/createOrder
 Authorization: Bearer {{userToken}}
 Content-Type: application/json
@@ -93,5 +96,3 @@ Content-Type: application/json
 GET http://localhost:7788/order/admin/allOrders
 Authorization: Bearer {{adminToken}}
 
-### 附：手动验证过期 token —— 用 JwtUtil 生成一个 1 秒过期的 token 后请求
-# （可用步骤 1 返回的 token 等 2 小时后自然过期）

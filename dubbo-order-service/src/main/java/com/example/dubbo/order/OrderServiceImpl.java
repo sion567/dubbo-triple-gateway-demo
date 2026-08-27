@@ -91,6 +91,7 @@ public class OrderServiceImpl implements OrderService {
      * 验证回滚：请求体 status 传 "FAIL"。
      */
     @Override
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('USER')")
     @GlobalTransactional(name = "create-order", rollbackFor = Exception.class)
     public String createOrder(OrderDTO order) {
         System.out.println("🚀 [OrderService] 全局事务开始, XID = " + RootContext.getXID());
@@ -103,7 +104,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getProduct(), count, money, "INIT");
         System.out.println("📦 [OrderService] 订单已写入 seata_order.orders");
 
-        // 2. RPC 扣余额（XID 由 SeataXidConsumerFilter 自动透传）
+        // 2. RPC 扣余额（XID+token 由 ContextPropagationConsumerFilter 自动透传）
         accountService.debit(order.getUserId(), money);
         System.out.println("💰 [OrderService] 已调用账户扣款 " + money + " 元");
 
@@ -122,21 +123,19 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 管理端接口：演示基于角色的访问控制。
-     * SecurityFilterV1 已完成认证并填充 SecurityContext，这里只做鉴权（ROLE_ADMIN）。
+     * 管理端接口：方法级权限演示。
+     * 身份由 ContextPropagationProviderFilter 验签原始 JWT 后重建进 SecurityContext。
+     *
+     * 注：@RequiresPermissions 是 Shiro 的注解；Spring Security 的等价写法是
+     * @PreAuthorize("hasAuthority('...')")（角色用 hasRole/hasAnyRole），本工程用后者。
+     * 权限点与若依风格一致：system:dept:add
      */
     @Override
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('system:dept:add')")
     public List<Map<String, Object>> getAllOrders() {
-        var authentication = org.springframework.security.core.context.SecurityContextHolder
-                .getContext().getAuthentication();
-        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-        System.out.println("👮 [OrderService] getAllOrders 调用者=" +
-                (authentication == null ? "anonymous" : authentication.getName()) + ", admin=" + isAdmin);
-
-        if (!isAdmin) {
-            return List.of(Map.of("code", 403, "message", "Forbidden: 需要 ROLE_ADMIN"));
-        }
+        System.out.println("👮 [OrderService] getAllOrders 调用者="
+                + org.springframework.security.core.context.SecurityContextHolder
+                        .getContext().getAuthentication().getName());
         // 查询演示用 mock 全量订单 + DB 里的订单
         List<Map<String, Object>> all = new ArrayList<>();
         orderDb.values().forEach(all::addAll);

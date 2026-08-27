@@ -4,9 +4,10 @@ import com.example.dubbo.api.StorageService;
 import com.example.dubbo.storage.mapper.StorageMapper;
 import io.seata.core.context.RootContext;
 import org.apache.dubbo.config.annotation.DubboService;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
- * 库存服务（RM）：作为分支事务参与全局事务（XID 由 Provider 过滤器自动绑定）。
+ * 库存服务（RM）：作为分支事务参与全局事务（XID、身份由 ContextPropagation 过滤器还原）。
  */
 @DubboService
 public class StorageServiceImpl implements StorageService {
@@ -18,6 +19,7 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
+    @PreAuthorize("hasRole('USER')")  // 下游服务也做鉴权，不只认证
     public void deduct(String productCode, int count) {
         System.out.println("📉 [StorageService] 扣库存开始, productCode=" + productCode
                 + ", count=" + count + ", XID=" + RootContext.getXID());

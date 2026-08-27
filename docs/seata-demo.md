@@ -27,7 +27,7 @@ spring.h2.console.enabled: true   # web 服务可用 /h2-console 访问，JDBC u
 - **TM**：order-service 的 `createOrder`，`@GlobalTransactional` 开启/提交/回滚全局事务
 - **RM**：三个服务各自的数据库操作，由 Seata 自动代理数据源，分支事务 + undo_log
 - **XID 透传**：Seata 官方无 Dubbo3 适配器，`dubbo-common` 里自定义了两个 Filter
-  （`SeataXidConsumerFilter` / `SeataXidProviderFilter`），通过 RPC attachment 传递 XID，
+  （现合并进 `ContextPropagationConsumerFilter` / `ContextPropagationProviderFilter`，与身份 token 一起透传），通过 RPC attachment 传递 XID，
   provider 端绑定到 `RootContext`，使下游分支事务挂在同一全局事务下
 
 ## 启动步骤

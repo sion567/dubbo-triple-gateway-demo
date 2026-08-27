@@ -1,2 +1,3 @@
-seataXidConsumerFilter=com.example.dubbo.seata.SeataXidConsumerFilter
-seataXidProviderFilter=com.example.dubbo.seata.SeataXidProviderFilter
+contextPropagationConsumerFilter=com.example.dubbo.security.ContextPropagationConsumerFilter
+contextPropagationProviderFilter=com.example.dubbo.security.ContextPropagationProviderFilter
+accessDeniedStatusFilter=com.example.dubbo.security.AccessDeniedStatusFilter

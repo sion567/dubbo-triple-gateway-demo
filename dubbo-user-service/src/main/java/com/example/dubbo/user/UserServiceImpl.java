@@ -35,11 +35,13 @@ public class UserServiceImpl implements UserService {
         accountDb.put("user", Map.of(
                 "passwordHash", passwordEncoder.encode("123456"),
                 "userId", 1L,
-                "roles", List.of("ROLE_USER")));
+                "roles", List.of("ROLE_USER"),
+                "perms", List.of("order:query", "order:create")));
         accountDb.put("admin", Map.of(
                 "passwordHash", passwordEncoder.encode("admin123"),
                 "userId", 2L,
-                "roles", List.of("ROLE_ADMIN", "ROLE_USER")));
+                "roles", List.of("ROLE_ADMIN", "ROLE_USER"),
+                "perms", List.of("order:query", "order:create", "system:dept:add", "system:dept:query")));
     }
 
     // 🔑 关键：注入订单服务
@@ -113,13 +115,16 @@ public class UserServiceImpl implements UserService {
 
         @SuppressWarnings("unchecked")
         List<String> roles = (List<String>) account.get("roles");
-        String token = JwtUtil.createToken(username, roles);
-        System.out.println("🔓 [UserService] 登录成功: " + username + ", roles=" + roles);
+        @SuppressWarnings("unchecked")
+        List<String> perms = (List<String>) account.getOrDefault("perms", List.of());
+        String token = JwtUtil.createToken(username, roles, perms);
+        System.out.println("🔓 [UserService] 登录成功: " + username + ", roles=" + roles + ", perms=" + perms);
 
         return Map.of(
                 "code", 0,
                 "username", username,
                 "roles", roles,
+                "perms", perms,
                 "token", token,
                 "tokenType", "Bearer",
                 "expiresAt", Instant.now().plusSeconds(2 * 3600).toString());
