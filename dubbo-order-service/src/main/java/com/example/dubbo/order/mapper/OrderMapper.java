@@ -22,6 +22,10 @@ public interface OrderMapper {
             "FROM orders WHERE user_id = #{userId}")
     List<Map<String, Object>> selectByUserId(Long userId);
 
+    @Select("SELECT id AS orderId, user_id AS userId, product_code AS productCode, product, count, money, status " +
+            "FROM orders ORDER BY id DESC")
+    List<Map<String, Object>> selectAll();
+
     @Select("SELECT COUNT(*) FROM orders WHERE user_id = #{userId}")
     int countByUserId(Long userId);
 

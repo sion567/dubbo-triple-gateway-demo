@@ -120,4 +120,27 @@ public class OrderServiceImpl implements OrderService {
         System.out.println("✅ [OrderService] 全局事务提交前业务完成");
         return "下单成功, XID=" + RootContext.getXID();
     }
+
+    /**
+     * 管理端接口：演示基于角色的访问控制。
+     * SecurityFilterV1 已完成认证并填充 SecurityContext，这里只做鉴权（ROLE_ADMIN）。
+     */
+    @Override
+    public List<Map<String, Object>> getAllOrders() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        System.out.println("👮 [OrderService] getAllOrders 调用者=" +
+                (authentication == null ? "anonymous" : authentication.getName()) + ", admin=" + isAdmin);
+
+        if (!isAdmin) {
+            return List.of(Map.of("code", 403, "message", "Forbidden: 需要 ROLE_ADMIN"));
+        }
+        // 查询演示用 mock 全量订单 + DB 里的订单
+        List<Map<String, Object>> all = new ArrayList<>();
+        orderDb.values().forEach(all::addAll);
+        all.addAll(orderMapper.selectAll());
+        return all;
+    }
 }

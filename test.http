@@ -1,28 +1,97 @@
+### ============================================================
+### JWT 认证完整流程（IDEA HTTP Client）
+### 前置：docker compose up -d（Nacos+Seata），启动 4 个服务
+### 账号：user/123456（ROLE_USER）、admin/admin123（ROLE_ADMIN）
+### ============================================================
+
+### 0. 健康检查（不需要 token）
+GET http://localhost:7788/user/getUser/1
+
+### 1. 登录 - 普通用户，自动保存 token 到变量 userToken
+POST http://localhost:7788/user/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "123456"
+}
+
+> {%
+    client.global.set("userToken", response.body.token);
+    client.log("userToken saved: " + response.body.token);
+%}
+
+### 2. 登录 - 管理员，保存 adminToken
+POST http://localhost:7788/user/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+> {%
+    client.global.set("adminToken", response.body.token);
+%}
+
+### 3. 登录失败 - 密码错误（期望 code=401，无 token）
+POST http://localhost:7788/user/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "wrong-password"
+}
+
+### 4. 无 token 访问订单接口（期望 401 Unauthorized: Missing token）
 GET http://localhost:7788/order/getOrder?id=101
-Authorization: Bearer valid-mock-token
-User-Agent: Mozilla/5.0
-###
+
+### 5. 伪造 token（期望 401 Invalid token）
 GET http://localhost:7788/order/getOrder?id=101
-Authorization: Bearer valid-mock-token
-User-Agent: Mozilla/5.0
-###
+Authorization: Bearer fake.token.value
+
+### 6. 普通用户带 token 查订单（期望 200，返回订单）
 GET http://localhost:7788/order/getOrder?id=101
-Authorization: Bearer valid-mock-token
-User-Agent: Mozilla/5.0
-###
-GET http://localhost:7788/order/getOrder?id=101
-Authorization: Bearer valid-mock-token
-User-Agent: Mozilla/5.0
-###
-GET http://localhost:7788/order/getOrder?id=101
-Authorization: Bearer valid-mock-token
-User-Agent: Mozilla/5.0
-###
-GET http://localhost:7788/order/getOrder?id=101
-Authorization: Bearer valid-mock-token
-User-Agent: Mozilla/5.0
-###
-GET http://localhost:7788/user/getUser/2
-###
-GET http://localhost:7788/user/getOrder/1
-###
+Authorization: Bearer {{userToken}}
+
+### 7. 普通用户访问管理端接口（期望 code=403，缺 ROLE_ADMIN）
+GET http://localhost:7788/order/admin/allOrders
+Authorization: Bearer {{userToken}}
+
+### 8. 管理员访问管理端接口（期望返回全部订单）
+GET http://localhost:7788/order/admin/allOrders
+Authorization: Bearer {{adminToken}}
+
+### 9. 带token下单 - 正常提交（Seata 全局事务）
+POST http://localhost:7788/order/createOrder
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "productCode": "iPhone15",
+  "product": "iPhone 15",
+  "count": 2,
+  "price": 6999.0
+}
+
+### 10. 带token下单 - status=FAIL 触发 Seata 全局回滚
+POST http://localhost:7788/order/createOrder
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "productCode": "iPhone15",
+  "product": "iPhone 15",
+  "count": 2,
+  "price": 6999.0,
+  "status": "FAIL"
+}
+
+### 11. 管理员查全部订单（可以看到刚才成功/回滚后的数据）
+GET http://localhost:7788/order/admin/allOrders
+Authorization: Bearer {{adminToken}}
+
+### 附：手动验证过期 token —— 用 JwtUtil 生成一个 1 秒过期的 token 后请求
+# （可用步骤 1 返回的 token 等 2 小时后自然过期）
