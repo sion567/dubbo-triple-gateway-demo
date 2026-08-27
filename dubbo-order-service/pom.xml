@@ -22,7 +22,13 @@
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
 
-        <!-- 🔑 Sentinel Dubbo Adapter -->
+        <!-- 🔑 Sentinel Dubbo Adapter
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-sentinel-spring-boot-starter</artifactId>
+        </dependency>
+        -->
+        <!-- 由 Sentinel 官方 维护，是专门为 Apache Dubbo 3.x 设计的第一方适配器-->
         <dependency>
             <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-apache-dubbo3-adapter</artifactId>
@@ -42,6 +48,5 @@
             <artifactId>dubbo-common</artifactId>
             <version>1.0.0</version>
         </dependency>
-
     </dependencies>
 </project>

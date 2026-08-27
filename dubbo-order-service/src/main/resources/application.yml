@@ -21,7 +21,7 @@ dubbo:
     name: dubbo        # 主协议：服务间调用使用 dubbo
     port: 20881
     ext-protocol: tri  # 扩展协议：同端口额外支持 triple，供 gateway 调用
-    #extension: securityFilter
+#    extension: com.example.dubbo.filter.SecurityFilterV1
   scan:
     base-packages: com.example.dubbo.order
   registry:
