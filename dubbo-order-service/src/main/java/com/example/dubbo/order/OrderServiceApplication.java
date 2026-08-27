@@ -1,10 +1,16 @@
 package com.example.dubbo.order;
+import com.alibaba.csp.sentinel.slots.block.RuleConstant;
+import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
+import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
+import jakarta.annotation.PostConstruct;
 import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.rpc.model.FrameworkModel;
 import org.apache.dubbo.rpc.protocol.tri.rest.filter.RestExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
+import java.util.Collections;
 
 @SpringBootApplication
 @EnableDiscoveryClient
@@ -19,6 +25,16 @@ public class OrderServiceApplication {
                         .getExtensionLoader(RestExtension.class);
         System.out.println("RestExtension extensions: " +
                 loader.getSupportedExtensions());
+    }
 
+    @PostConstruct
+    public void initFlowRules() {
+        // 限流规则
+        FlowRule rule = new FlowRule();
+        // 资源名：接口全限定名 + ":" + 方法签名
+        rule.setResource("com.example.dubbo.api.OrderService:getOrdersByUserId(java.lang.Long)");
+        rule.setGrade(RuleConstant.FLOW_GRADE_QPS); // QPS 模式
+        rule.setCount(3); // 阈值 = 3
+        FlowRuleManager.loadRules(Collections.singletonList(rule));
     }
 }

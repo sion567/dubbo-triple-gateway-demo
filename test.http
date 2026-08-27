@@ -1,0 +1,28 @@
+GET http://localhost:7788/order/getOrder?id=101
+Authorization: Bearer valid-mock-token
+User-Agent: Mozilla/5.0
+###
+GET http://localhost:7788/order/getOrder?id=101
+Authorization: Bearer valid-mock-token
+User-Agent: Mozilla/5.0
+###
+GET http://localhost:7788/order/getOrder?id=101
+Authorization: Bearer valid-mock-token
+User-Agent: Mozilla/5.0
+###
+GET http://localhost:7788/order/getOrder?id=101
+Authorization: Bearer valid-mock-token
+User-Agent: Mozilla/5.0
+###
+GET http://localhost:7788/order/getOrder?id=101
+Authorization: Bearer valid-mock-token
+User-Agent: Mozilla/5.0
+###
+GET http://localhost:7788/order/getOrder?id=101
+Authorization: Bearer valid-mock-token
+User-Agent: Mozilla/5.0
+###
+GET http://localhost:7788/user/getUser/2
+###
+GET http://localhost:7788/user/getOrder/1
+###

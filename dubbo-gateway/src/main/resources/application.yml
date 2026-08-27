@@ -24,8 +24,16 @@ spring:
 server:
   port: 7788
 
+# Sentinel 配置
+sentinel:
+  transport:
+    dashboard: localhost:8080  # Sentinel Dashboard 地址
+    port: 8719  # 与控制台通信的端口
+  eager: true  # 启动时立即初始化
+
 logging:
   level:
+    com.alibaba.csp.sentinel: DEBUG
     org.springframework.cloud.gateway: TRACE
     org.springframework.cloud.loadbalancer: DEBUG
     org.springframework.web.reactive: DEBUG

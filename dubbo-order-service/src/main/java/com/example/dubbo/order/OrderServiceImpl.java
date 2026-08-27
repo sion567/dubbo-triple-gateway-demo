@@ -1,5 +1,7 @@
 package com.example.dubbo.order;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.example.dubbo.api.OrderService;
 import com.example.dubbo.api.vo.OrderDTO;
 import org.apache.dubbo.config.annotation.DubboService;
@@ -30,12 +32,22 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @SentinelResource(value = "getOrdersByUserId", blockHandler = "handleGetOrdersBlock")
     public List<Map<String, Object>> getOrdersByUserId(Long userId) {
         System.out.println("📨 [OrderService] getOrdersByUserId(" + userId + ")");
+        // 模拟耗时
+        try { Thread.sleep(50); } catch (InterruptedException e) {}
         return orderDb.getOrDefault(userId, Collections.emptyList());
     }
 
+    // 限流降级方法
+    public List<Map<String, Object>> handleGetOrdersBlock(Long userId, BlockException ex) {
+        System.out.println("⚠️ [OrderService] getOrdersByUserId 被限流! userId=" + userId);
+        return Collections.emptyList();
+    }
+
     @Override
+    @SentinelResource(value = "getOrderById", blockHandler = "handleGetOrderBlock")
     public Map<String, Object> getOrderById(Long orderId) {
         System.out.println("📨 [OrderService] getOrderById(" + orderId + ")");
         // 简单模拟：遍历查找
@@ -47,6 +59,11 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         return Map.of("error", "订单不存在");
+    }
+
+    public Map<String, Object> handleGetOrderBlock(Long orderId, BlockException ex) {
+        System.out.println("⚠️ [OrderService] getOrderById 被限流! orderId=" + orderId);
+        return Map.of("error", "服务繁忙，请稍后重试");
     }
 
     @Override

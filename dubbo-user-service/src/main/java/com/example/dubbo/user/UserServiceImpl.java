@@ -1,5 +1,7 @@
 package com.example.dubbo.user;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.example.dubbo.api.OrderService;
 import com.example.dubbo.api.UserService;
 import org.apache.dubbo.config.annotation.DubboReference;
@@ -27,6 +29,7 @@ public class UserServiceImpl implements UserService {
     private OrderService orderService;
 
     @Override
+    @SentinelResource(value = "getUserInfo")
     public Map<String, Object> getUserInfo(Long userId) {
         System.out.println("📨 [UserService] getUserInfo(" + userId + ")");
         String name = userDb.getOrDefault(userId, "未知用户");
@@ -37,6 +40,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @SentinelResource(value = "getUserWithOrders", blockHandler = "handleGetUserWithOrdersBlock")
     public Map<String, Object> getUserWithOrders(Long userId) {
         System.out.println("📨 [UserService] getUserWithOrders(" + userId + ")");
 
@@ -67,5 +71,11 @@ public class UserServiceImpl implements UserService {
         }
 
         return result;
+    }
+
+    // 限流降级方法
+    public Map<String, Object> handleGetUserWithOrdersBlock(Long userId, BlockException ex) {
+        System.out.println("⚠️ [UserService] getUserWithOrders 被限流! userId=" + userId);
+        return Map.of("userId", userId, "error", "服务繁忙，请稍后重试");
     }
 }
