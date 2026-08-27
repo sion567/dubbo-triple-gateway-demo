@@ -2,7 +2,7 @@ spring:
   application:
     name: dubbo-order-service
   main:
-    web-application-type: none
+    web-application-type: reactive  # 启动 Netty 容器承载 Actuator 端点（原 none 会导致端点不生效）
   cloud:
     nacos:
       username: nacos
@@ -34,6 +34,17 @@ logging:
   level:
     "org.apache.dubbo.rpc.protocol.tri": debug
     "org.apache.dubbo.remoting": debug
+
+management:
+  server:
+    port: 9001            # 管理端点独立端口，与 dubbo(20881)/tri 业务端口隔离
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
 
 ##############双注册#############################
 # Nacos 中的服务名	类型	说明

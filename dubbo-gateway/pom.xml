@@ -26,7 +26,7 @@
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
 
-        <!-- SpringCloud Alibaba Sentinel (Gateway专用) -->
+        <!-- 基础 starter：sentinel-core、规则管理、与 Spring Cloud 的自动装配（SentinelResourceAspect、dashboard 连接配置项等）。任何模块接 Sentinel 都要它 -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
@@ -37,26 +37,21 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- SpringCloud Alibaba Sentinel Gateway -->
+        <!-- 网关专用模块：引入 sentinel-api-gateway-adapter（网关路由/API 分组限流规则）和 WebFlux 适配，自动装配出 SentinelGatewayFilter，把网关请求纳入埋点。没有它，网关上的请求对 Sentinel 是不可见的 -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-alibaba-sentinel-gateway</artifactId>
         </dependency>
-        <!-- Sentinel 控制台传输 -->
+        <!-- 和控制台（dashboard）通信的传输层。基础 starter 不带 transport的 -->
         <dependency>
             <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-transport-simple-http</artifactId>
         </dependency>
 
-        <!-- 1. Actuator 核心依赖（负责生成健康检查和监控数据） -->
+        <!-- Actuator：健康检查和监控数据（Netty 容器由 gateway 自带的 WebFlux 提供，无需重复依赖） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <!-- 2. WebFlux 依赖（提供轻量级内置 Netty 容器，让 Actuator 接口可以通过 HTTP 访问） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
         <dependency>

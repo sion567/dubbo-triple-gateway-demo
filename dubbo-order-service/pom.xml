@@ -22,20 +22,20 @@
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
 
-        <!-- 🔑 Sentinel Dubbo Adapter
         <dependency>
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo-sentinel-spring-boot-starter</artifactId>
         </dependency>
-        -->
-        <!-- 由 Sentinel 官方 维护，是专门为 Apache Dubbo 3.x 设计的第一方适配器-->
+
+        <!-- Actuator：健康检查和监控数据（HTTP 端点，供 Nacos/运维探活） -->
         <dependency>
-            <groupId>com.alibaba.csp</groupId>
-            <artifactId>sentinel-apache-dubbo3-adapter</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- WebFlux：轻量级 Netty 容器，仅用于承载 Actuator 端点 -->
         <dependency>
-            <groupId>com.alibaba.csp</groupId>
-            <artifactId>sentinel-transport-simple-http</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
         <dependency>

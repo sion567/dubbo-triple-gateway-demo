@@ -26,14 +26,20 @@
             <artifactId>dubbo-spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- 🔑 Sentinel Dubbo Adapter -->
         <dependency>
-            <groupId>com.alibaba.csp</groupId>
-            <artifactId>sentinel-apache-dubbo3-adapter</artifactId>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-sentinel-spring-boot-starter</artifactId>
         </dependency>
+
+        <!-- Actuator：健康检查和监控数据（HTTP 端点，供 Nacos/运维探活） -->
         <dependency>
-            <groupId>com.alibaba.csp</groupId>
-            <artifactId>sentinel-transport-simple-http</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!-- WebFlux：轻量级 Netty 容器，仅用于承载 Actuator 端点 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
         <dependency>

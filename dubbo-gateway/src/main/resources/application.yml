@@ -31,6 +31,17 @@ sentinel:
     port: 8719  # 与控制台通信的端口
   eager: true  # 启动时立即初始化
 
+management:
+  server:
+    port: 9000            # 管理端点独立端口，不占用网关业务端口 7788
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway  # gateway 端点可查看路由表
+  endpoint:
+    health:
+      show-details: always
+
 logging:
   level:
     com.alibaba.csp.sentinel: DEBUG
