@@ -3,10 +3,10 @@ spring:
     name: dubbo-gateway
   cloud:
     nacos:
-      username: nacos
-      password: nacos
+      username: ${NACOS_USER:nacos}
+      password: ${NACOS_PWD:nacos}
       discovery:
-        server-addr: 192.168.40.237:8848
+        server-addr: ${nacos.address:localhost:8848}
     gateway:
       server:
         webflux:

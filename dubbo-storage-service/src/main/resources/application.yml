@@ -1,8 +1,8 @@
 spring:
   application:
-    name: dubbo-user-service
+    name: dubbo-storage-service
   main:
-    web-application-type: reactive  # 启动 Netty 容器承载 Actuator 端点
+    web-application-type: reactive  # Netty 容器承载 Actuator 端点
   cloud:
     nacos:
       username: ${NACOS_USER:nacos}
@@ -13,22 +13,38 @@ spring:
   # H2 内存库 + MySQL 兼容模式：sample 免装 MySQL
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:seata_account;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:mem:seata_storage;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1
     username: sa
     password: ""
+
+dubbo:
+  application:
+    name: dubbo-storage-service
+    logger: slf4j
+    qos-enable: false
+  protocol:
+    name: dubbo
+    port: 20883
+    ext-protocol: tri
+  scan:
+    base-packages: com.example.dubbo.storage
+  registry:
+    address: nacos://${nacos.address:localhost}:8848?username=nacos&password=nacos
 
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
-# Seata AT 模式客户端配置
 seata:
   enabled: true
   application-id: ${spring.application.name}
+  # 事务组名，需与服务端 service.vgroup-mapping 中配置的组一致
   tx-service-group: demo_tx_group
   service:
     vgroup-mapping:
+      # key=事务组名, value=TC 集群名（Seata Server 的 cluster，默认 default）
       demo_tx_group: default
+    # 直连兜底：注册中心不可用时按此地址连 TC（生产可去掉）
     grouplist:
       default: ${seata.server:localhost}:8091
   registry:
@@ -38,25 +54,12 @@ seata:
       namespace: ""
       group: SEATA_GROUP
       application: seata-server
+  # 数据源自动代理（AT 模式核心开关，默认即 true，这里显式声明）
   enable-auto-data-source-proxy: true
-
-dubbo:
-  application:
-    name: dubbo-user-service
-    logger: slf4j
-    qos-port: 22222
-  protocol:
-    name: dubbo
-    port: 20882
-    ext-protocol: tri
-  scan:
-    base-packages: com.example.dubbo.user
-  registry:
-    address: nacos://${nacos.address:localhost}:8848?username=nacos&password=nacos
 
 management:
   server:
-    port: 9002            # 管理端点独立端口，与 dubbo(20882)/tri 业务端口隔离
+    port: 9003
   endpoints:
     web:
       exposure:

@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi:schema="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/xsd/maven-4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.example</groupId>
@@ -10,7 +9,7 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>dubbo-user-service</artifactId>
+    <artifactId>dubbo-storage-service</artifactId>
 
     <dependencies>
         <dependency>
@@ -26,17 +25,11 @@
             <artifactId>dubbo-spring-boot-starter</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.dubbo</groupId>
-            <artifactId>dubbo-sentinel-spring-boot-starter</artifactId>
-        </dependency>
-
-        <!-- Actuator：健康检查和监控数据（HTTP 端点，供 Nacos/运维探活） -->
+        <!-- Actuator：健康检查和监控数据 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        <!-- WebFlux：轻量级 Netty 容器，仅用于承载 Actuator 端点 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
@@ -68,6 +61,5 @@
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
-
     </dependencies>
 </project>

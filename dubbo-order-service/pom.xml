@@ -48,5 +48,21 @@
             <artifactId>dubbo-common</artifactId>
             <version>1.0.0</version>
         </dependency>
+
+        <!-- Seata AT：数据源自动代理 + 全局事务客户端 -->
+        <dependency>
+            <groupId>io.seata</groupId>
+            <artifactId>seata-spring-boot-starter</artifactId>
+        </dependency>
+        <!-- DB 访问 -->
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 </project>

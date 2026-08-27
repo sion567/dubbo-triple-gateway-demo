@@ -35,6 +35,12 @@
             <artifactId>jakarta.servlet-api</artifactId>
             <scope>compile</scope>
         </dependency>
+
+        <!-- XID 透传过滤器依赖 RootContext -->
+        <dependency>
+            <groupId>io.seata</groupId>
+            <artifactId>seata-core</artifactId>
+        </dependency>
     </dependencies>
 
 

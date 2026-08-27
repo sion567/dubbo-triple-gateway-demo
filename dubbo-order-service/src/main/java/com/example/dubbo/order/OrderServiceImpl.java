@@ -2,18 +2,33 @@ package com.example.dubbo.order;
 
 import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.example.dubbo.api.AccountService;
 import com.example.dubbo.api.OrderService;
+import com.example.dubbo.api.StorageService;
 import com.example.dubbo.api.vo.OrderDTO;
+import com.example.dubbo.order.mapper.OrderMapper;
+import io.seata.core.context.RootContext;
+import io.seata.spring.annotation.GlobalTransactional;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
 import java.util.*;
 
 @DubboService
 public class OrderServiceImpl implements OrderService {
 
-    // 模拟订单数据
+    // 模拟订单数据（查询演示用）
     private final Map<Long, List<Map<String, Object>>> orderDb = new HashMap<>();
 
-    public OrderServiceImpl() {
+    private final OrderMapper orderMapper;
+
+    @DubboReference(protocol = "dubbo")
+    private AccountService accountService;
+
+    @DubboReference(protocol = "dubbo")
+    private StorageService storageService;
+
+    public OrderServiceImpl(OrderMapper orderMapper) {
+        this.orderMapper = orderMapper;
         // 用户1的订单
         orderDb.put(1L, Arrays.asList(
                 Map.of("orderId", 101L, "product", "iPhone 15", "price", 6999.0, "status", "已发货"),
@@ -66,8 +81,43 @@ public class OrderServiceImpl implements OrderService {
         return Map.of("error", "服务繁忙，请稍后重试");
     }
 
+    /**
+     * 下单：跨 3 个库的分布式事务（Seata AT 模式）。
+     * 1. 本服务：orders 表插入订单（分支事务，seata_order 库）
+     * 2. user-service：account 表扣余额（分支事务，seata_account 库）
+     * 3. storage-service：storage 表扣库存（分支事务，seata_storage 库）
+     *
+     * 任一环节抛异常（余额不足/库存不足/模拟失败），三个库全部自动回滚。
+     * 验证回滚：请求体 status 传 "FAIL"。
+     */
     @Override
+    @GlobalTransactional(name = "create-order", rollbackFor = Exception.class)
     public String createOrder(OrderDTO order) {
-        return "";
+        System.out.println("🚀 [OrderService] 全局事务开始, XID = " + RootContext.getXID());
+
+        int count = order.getCount() == null ? 1 : order.getCount();
+        double money = order.getPrice() == null ? 0.0 : order.getPrice() * count;
+
+        // 1. 写订单（本地分支事务，Seata 代理数据源自动注册分支 + 记录 undo_log）
+        orderMapper.insert(order.getUserId(), order.getProductCode(),
+                order.getProduct(), count, money, "INIT");
+        System.out.println("📦 [OrderService] 订单已写入 seata_order.orders");
+
+        // 2. RPC 扣余额（XID 由 SeataXidConsumerFilter 自动透传）
+        accountService.debit(order.getUserId(), money);
+        System.out.println("💰 [OrderService] 已调用账户扣款 " + money + " 元");
+
+        // 3. RPC 扣库存
+        storageService.deduct(order.getProductCode(), count);
+        System.out.println("📉 [OrderService] 已调用库存扣减 " + count + " 件");
+
+        // 模拟下单失败，验证全局回滚
+        if ("FAIL".equalsIgnoreCase(order.getStatus())) {
+            throw new RuntimeException("模拟下单失败，全局事务回滚");
+        }
+
+        orderMapper.updateStatus(order.getUserId(), "SUCCESS");
+        System.out.println("✅ [OrderService] 全局事务提交前业务完成");
+        return "下单成功, XID=" + RootContext.getXID();
     }
 }

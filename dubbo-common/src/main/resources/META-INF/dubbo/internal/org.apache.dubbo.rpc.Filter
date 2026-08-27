@@ -1,0 +1,2 @@
+seataXidConsumerFilter=com.example.dubbo.seata.SeataXidConsumerFilter
+seataXidProviderFilter=com.example.dubbo.seata.SeataXidProviderFilter

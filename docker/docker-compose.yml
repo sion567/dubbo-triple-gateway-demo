@@ -1,0 +1,58 @@
+services:
+  nacos:
+    image: nacos/nacos-server:v3.2.4-slim
+    container_name: demo-nacos
+    environment:
+      MODE: standalone
+      # 单机内嵌 Derby 存储，sample 用途；生产换 MySQL 存储
+      # v3 注意：NACOS_AUTH_TOKEN 必须是 Base64 字符串（原文 ThisIsMyCustomSecretKey0123456789）
+      NACOS_AUTH_ENABLE: "true"
+      NACOS_AUTH_TOKEN: "VGhpc0lzTXlDdXN0b21TZWNyZXRLZXkwMTIzNDU2Nzg="
+      NACOS_AUTH_IDENTITY_KEY: serverIdentity
+      NACOS_AUTH_IDENTITY_VALUE: security
+      JVM_XMS: 256m
+      JVM_XMX: 256m
+    ports:
+      - "8080:8080"   # 控制台 UI（v3 控制台与主服务分离，http://localhost:8080/nacos）
+      - "8848:8848"   # 主端口：HTTP/OpenAPI
+      - "9848:9848"   # gRPC（客户端 2.x/3.x 都会用，端口 = 8848 + 1000）
+    # slim 镜像可能不带 curl/wget，若 healthcheck 一直 unhealthy 可删除本段，
+    # 并把 seata-server 的 depends_on 改回 condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -o /dev/null http://localhost:8080/nacos/ || wget -q -O /dev/null http://localhost:8080/nacos/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  seata-server:
+    image: seataio/seata-server:2.0.0
+    container_name: demo-seata-server
+    depends_on:
+      nacos:
+        condition: service_healthy
+    environment:
+      # 注册到 Nacos 时对外暴露的 IP。
+      # 默认 127.0.0.1：适用于「docker 跑基础设施 + 应用跑宿主机」的标准 sample 场景，
+      # 客户端从 Nacos 拿到的 127.0.0.1:8091 会命中 compose 映射出来的端口。
+      # 若应用与 docker 不在同一台机器，用环境变量覆盖：SEATA_IP=<宿主机IP> docker compose up -d
+      SEATA_IP: "${SEATA_IP:-127.0.0.1}"
+      SEATA_PORT: "8091"
+      STORE_MODE: "file"
+    ports:
+      - "8091:8091"
+      - "7091:7091"   # Web 控制台
+    volumes:
+      - ./seata/registry.conf:/seata-server/resources/registry.conf:ro
+      - ./seata/file.conf:/seata-server/resources/file.conf:ro
+      - seata-session:/seata-server/sessionStore
+
+volumes:
+  seata-session:
+
+# 业务库说明：三个服务均使用 H2 内存库（MySQL 兼容模式），启动时自动建表灌数据，
+# 无需外部 MySQL。如需改回 MySQL：服务 pom 换回 mysql-connector-j，
+# yml 数据源改回 jdbc:mysql://...，并用 docs/sql/seata/*.sql 建库。
+#
+# 一键启动（本机跑应用）：
+#   docker compose up -d
+#   然后依次启动 dubbo-user-service / dubbo-storage-service / dubbo-order-service / dubbo-gateway

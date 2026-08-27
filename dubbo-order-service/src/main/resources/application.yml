@@ -5,10 +5,45 @@ spring:
     web-application-type: reactive  # 启动 Netty 容器承载 Actuator 端点（原 none 会导致端点不生效）
   cloud:
     nacos:
-      username: nacos
-      password: nacos
+      username: ${NACOS_USER:nacos}
+      password: ${NACOS_PWD:nacos}
       discovery:
-        server-addr: 192.168.40.237:8848
+        server-addr: ${nacos.address:localhost:8848}
+  # Seata AT 使用的业务数据源（会被 Seata 自动代理）
+  # H2 内存库 + MySQL 兼容模式：sample 免装 MySQL；换 MySQL 时改回
+  # jdbc:mysql://${mysql.host:localhost}:3306/seata_order?useUnicode=true&characterEncoding=utf8
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:seata_order;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+# Seata AT 模式客户端配置
+seata:
+  enabled: true
+  application-id: ${spring.application.name}
+  # 事务组名，需与服务端 service.vgroup-mapping 中配置的组一致
+  tx-service-group: demo_tx_group
+  service:
+    vgroup-mapping:
+      # key=事务组名, value=TC 集群名（Seata Server 的 cluster，默认 default）
+      demo_tx_group: default
+    # 直连兜底：注册中心不可用时按此地址连 TC（生产可去掉）
+    grouplist:
+      default: ${seata.server:localhost}:8091
+  registry:
+    type: nacos
+    nacos:
+      server-addr: ${nacos.address:localhost}:8848
+      namespace: ""
+      group: SEATA_GROUP
+      application: seata-server
+  # 数据源自动代理（AT 模式核心开关，默认即 true，这里显式声明）
+  enable-auto-data-source-proxy: true
 
 dubbo:
   application:
@@ -25,7 +60,7 @@ dubbo:
   scan:
     base-packages: com.example.dubbo.order
   registry:
-    address: nacos://${nacos.address:192.168.40.237}:8848
+    address: nacos://${nacos.address:localhost}:8848
     username: ${NACOS_USER:nacos}
     password: ${NACOS_PWD:nacos}
     register-mode: instance  # 只注册应用级，不注册接口级
