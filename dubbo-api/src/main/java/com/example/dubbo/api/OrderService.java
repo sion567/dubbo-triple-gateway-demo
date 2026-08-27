@@ -18,9 +18,21 @@ public interface OrderService {
     String createOrder(@RequestBody OrderDTO order);
 
     /**
-     * 管理端查询全部订单：需要 ROLE_ADMIN（由 SecurityFilterV1 填充的 SecurityContext 校验）。
+     * 管理端查询全部订单：需要 ROLE_ADMIN（由 ContextPropagationProviderFilter 重建的 SecurityContext 校验）。
      */
     @GetMapping("/admin/allOrders")
     List<Map<String, Object>> getAllOrders();
+
+    /** 订单列表（登录即可看） */
+    @GetMapping("/list")
+    List<Map<String, Object>> list();
+
+    /** 更新订单状态（管理员） */
+    @PostMapping("/updateStatus")
+    Map<String, Object> updateStatus(@RequestBody Map<String, Object> body);
+
+    /** 删除订单（管理员） */
+    @DeleteMapping("/delete/{id}")
+    Map<String, Object> delete(@PathVariable("id") Long id);
 
 }

@@ -6,6 +6,7 @@ import com.example.dubbo.api.OrderService;
 import com.example.dubbo.api.UserService;
 import com.example.dubbo.api.vo.LoginRequest;
 import com.example.dubbo.security.JwtUtil;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,8 +25,10 @@ public class UserServiceImpl implements UserService {
     // user/123456 -> ROLE_USER；admin/admin123 -> ROLE_ADMIN
     private final Map<String, Map<String, Object>> accountDb = new HashMap<>();
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final com.example.dubbo.user.mapper.AccountMapper accountMapper;
 
-    public UserServiceImpl() {
+    public UserServiceImpl(com.example.dubbo.user.mapper.AccountMapper accountMapper) {
+        this.accountMapper = accountMapper;
         userDb.put(1L, "张三");
         userDb.put(2L, "李四");
         userDb.put(3L, "王五");
@@ -128,5 +131,31 @@ public class UserServiceImpl implements UserService {
                 "token", token,
                 "tokenType", "Bearer",
                 "expiresAt", Instant.now().plusSeconds(2 * 3600).toString());
+    }
+
+    /**
+     * 前端用户列表：mock 用户名 + 登录账号的角色 + DB 余额。
+     */
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public Map<String, Object> list() {
+        List<Map<String, Object>> users = new java.util.ArrayList<>();
+        userDb.forEach((id, name) -> {
+            Map<String, Object> u = new HashMap<>();
+            u.put("userId", id);
+            u.put("name", name);
+            users.add(u);
+        });
+        // 附上账号信息（username/roles/余额）
+        accountDb.forEach((username, acc) -> {
+            Long userId = (Long) acc.get("userId");
+            Double money = accountMapper.selectMoney(userId);
+            users.stream().filter(u -> userId.equals(u.get("userId"))).findFirst().ifPresent(u -> {
+                u.put("username", username);
+                u.put("roles", acc.get("roles"));
+                u.put("money", money);
+            });
+        });
+        return Map.of("code", 0, "users", users);
     }
 }

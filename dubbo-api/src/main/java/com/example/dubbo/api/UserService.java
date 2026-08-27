@@ -21,4 +21,8 @@ public interface UserService {
      */
     @PostMapping("/login")
     Map<String, Object> login(@RequestBody LoginRequest request);
+
+    /** 用户列表（含角色与余额，管理员） */
+    @GetMapping("/list")
+    Map<String, Object> list();
 }

@@ -142,4 +142,28 @@ public class OrderServiceImpl implements OrderService {
         all.addAll(orderMapper.selectAll());
         return all;
     }
+
+    /** 前端订单列表：真实 DB 订单 */
+    @Override
+    public List<Map<String, Object>> list() {
+        return orderMapper.selectAll();
+    }
+
+    /** 前端更新订单状态（管理员） */
+    @Override
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public Map<String, Object> updateStatus(Map<String, Object> body) {
+        Long id = Long.valueOf(String.valueOf(body.get("id")));
+        String status = String.valueOf(body.get("status"));
+        int rows = orderMapper.updateStatusById(id, status);
+        return rows > 0 ? Map.of("code", 0, "message", "ok") : Map.of("code", 404, "message", "订单不存在");
+    }
+
+    /** 前端删除订单（管理员） */
+    @Override
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public Map<String, Object> delete(Long id) {
+        int rows = orderMapper.deleteById(id);
+        return rows > 0 ? Map.of("code", 0, "message", "ok") : Map.of("code", 404, "message", "订单不存在");
+    }
 }

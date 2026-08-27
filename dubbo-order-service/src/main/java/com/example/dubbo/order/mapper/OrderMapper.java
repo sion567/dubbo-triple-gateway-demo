@@ -1,5 +1,6 @@
 package com.example.dubbo.order.mapper;
 
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
@@ -31,4 +32,10 @@ public interface OrderMapper {
 
     @Update("UPDATE orders SET status = #{status} WHERE user_id = #{userId} AND status = 'INIT'")
     int updateStatus(@Param("userId") Long userId, @Param("status") String status);
+
+    @Update("UPDATE orders SET status = #{status} WHERE id = #{id}")
+    int updateStatusById(@Param("id") Long id, @Param("status") String status);
+
+    @Delete("DELETE FROM orders WHERE id = #{id}")
+    int deleteById(Long id);
 }

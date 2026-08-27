@@ -21,6 +21,11 @@ spring:
               predicates:
                 - Path=/order/**
 
+            - id: storage_service_route
+              uri: lb://dubbo-storage-service
+              predicates:
+                - Path=/storage/**
+
 server:
   port: 7788
 

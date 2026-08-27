@@ -33,6 +33,11 @@ desktop.ini
 cp.txt
 application-local.yml
 
+# ---- Node / frontend ----
+node_modules/
+frontend/dist/
+npm-debug.log*
+
 # ---- Maven ----
 .flattened-pom.xml
 dependency-reduced-pom.xml
