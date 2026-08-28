@@ -12,6 +12,8 @@ import io.seata.core.context.RootContext;
 import io.seata.spring.annotation.GlobalTransactional;
 import org.apache.dubbo.config.annotation.DubboReference;
 
+import java.math.BigDecimal;
+
 /**
  * 下单事务逻辑（TM）：REST 入口和 MQ 消费者共用。
  * 独立成 Bean 是因为 @GlobalTransactional 需要经过 Spring 代理生效，
@@ -42,16 +44,16 @@ public class OrderTxService {
         System.out.println("🚀 [OrderTxService] 全局事务开始, XID = " + RootContext.getXID());
 
         int count = order.getCount() == null ? 1 : order.getCount();
-        double money = order.getPrice() == null ? 0.0 : order.getPrice() * count;
+        BigDecimal money = order.getPrice() == null ? BigDecimal.ZERO : order.getPrice().multiply(BigDecimal.valueOf(count));
 
         orderMapper.insert(order.getUserId(), order.getProductCode(),
                 order.getProduct(), count, money, "INIT");
-        System.out.println("📦 [OrderTxService] 订单已写入 seata_order.orders");
+        System.out.println("📦 [OrderTxService] 订单已写入 seata_order.t_orders");
 
         DebitResponse debit = accountProtoService.debit(DebitRequest.newBuilder()
-                .setUserId(order.getUserId()).setMoney(money).build());
+                .setUserId(order.getUserId()).setMoney(money.doubleValue()).build());
         if (!debit.getSuccess()) {
-            throw new RuntimeException(debit.getMessage());  // 触发 Seata 全局回滚
+            throw new RuntimeException(debit.getMessage());
         }
         System.out.println("💰 [OrderTxService] 已调用账户扣款 " + money + " 元, 剩余=" + debit.getRemaining());
 

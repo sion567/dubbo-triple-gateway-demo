@@ -25,12 +25,12 @@ import java.util.List;
  */
 @Component
 public class JwtAuthenticationWebFilter implements WebFilter {
-
+    private static final String HEADER_AUTHORIZATION = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
+        String authHeader = exchange.getRequest().getHeaders().getFirst(HEADER_AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
             // 交给授权层按"未认证"处理 -> 401
             return chain.filter(exchange);

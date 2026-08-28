@@ -2,13 +2,13 @@ spring:
   application:
     name: dubbo-user-service
   main:
-    web-application-type: reactive  # 启动 Netty 容器承载 Actuator 端点
+    web-application-type: none   # 纯 Dubbo 服务，无内嵌 Web 容器（监控走 SkyWalking/Dubbo Admin/QoS）
   cloud:
     nacos:
       username: ${NACOS_USER:nacos}
       password: ${NACOS_PWD:nacos}
       discovery:
-        server-addr: ${nacos.address:localhost:8848}
+        server-addr: ${nacos.address:172.26.205.13:8848}
   # Seata AT 使用的业务数据源（会被 Seata 自动代理）
   # H2 内存库 + MySQL 兼容模式：sample 免装 MySQL
   datasource:
@@ -16,6 +16,13 @@ spring:
     url: jdbc:h2:mem:seata_account;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1
     username: sa
     password: ""
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+      continue-on-error: true
+      encoding: UTF-8
 
 mybatis:
   configuration:
@@ -23,21 +30,27 @@ mybatis:
 
 # Seata AT 模式客户端配置
 seata:
-  enabled: true
+  enabled: false
   application-id: ${spring.application.name}
+  # 事务组名，需与服务端 service.vgroup-mapping 中配置的组一致
   tx-service-group: demo_tx_group
   service:
     vgroup-mapping:
+      # key=事务组名, value=TC 集群名（Seata Server 的 cluster，默认 default）
       demo_tx_group: default
+    # 直连兜底：注册中心不可用时按此地址连 TC（生产可去掉）
     grouplist:
-      default: ${seata.server:localhost}:8091
+      default: ${seata.server:172.26.205.13}:8091
   registry:
-    type: nacos
-    nacos:
-      server-addr: ${nacos.address:localhost}:8848
-      namespace: ""
-      group: SEATA_GROUP
-      application: seata-server
+    type: file # 注册中心为 file 模式，直连 TC，不走 Nacos（seataio 2.0 镜像不读挂载的 registry.conf，注册不到 Nacos；单 TC 直连最稳）
+  config:
+    type: file # 配置中心为 file 模式
+  client:
+    service:
+      grouplist:
+        # 直连你的 Docker 宿主机 IP 和暴露的 8091 端口
+        default: ${seata.server:172.26.205.13}:8091
+  # 数据源自动代理（AT 模式核心开关，默认即 true，这里显式声明）
   enable-auto-data-source-proxy: true
 
 dubbo:
@@ -52,15 +65,8 @@ dubbo:
   scan:
     base-packages: com.example.dubbo.user
   registry:
-    address: nacos://${nacos.address:localhost}:8848?username=nacos&password=nacos
+    address: nacos://${nacos.address:172.26.205.13}:8848
+    username: ${NACOS_USER:nacos}
+    password: ${NACOS_PWD:nacos}
+    register-mode: instance  # 只注册应用级，不注册接口级
 
-management:
-  server:
-    port: 9002            # 管理端点独立端口，与 dubbo(20882)/tri 业务端口隔离
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always

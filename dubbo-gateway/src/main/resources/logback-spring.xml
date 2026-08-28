@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!-- SkyWalking：无 Agent 时 TID 显示为 N/A，挂上 Agent 自动输出真实 traceId -->
-    <conversionRule conversionWord="tid"
-                    converterClass="org.apache.skywalking.apm.toolkit.log.logback.v1.x.LogbackPatternLayoutEncoder"/>
-
+    <!-- SkyWalking：无 Agent 时 TID 显示为 N/A，挂上 Agent 自动输出真实 traceId。
+         注意：toolkit 9.x 已移除 LogbackPatternLayoutEncoder（旧 conversionRule 方案），
+         %tid 由 TraceIdPatternLogbackLayout 自带支持，无需 conversionRule -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
             <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">

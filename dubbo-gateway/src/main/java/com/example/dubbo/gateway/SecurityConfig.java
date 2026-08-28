@@ -43,11 +43,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeExchange(exchange -> exchange
                         // 精确白名单：只放登录和探活
-                        .pathMatchers("/user/login", "/actuator/**").permitAll()
+                        .pathMatchers("/auth/login", "/actuator/**").permitAll()
                         .anyExchange().authenticated())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((exchange, e) -> unauthorized(exchange.getResponse())))
-                .addFilterAt(jwtAuthenticationWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                // 关键：JwtAuthenticationWebFilter 必须在 AuthorizationWebFilter 之前执行，
+                // 否则 authorizeExchange 检查时 SecurityContext 还是空的，直接返回 401
+                .addFilterBefore(jwtAuthenticationWebFilter, SecurityWebFiltersOrder.AUTHORIZATION)
                 .build();
     }
 

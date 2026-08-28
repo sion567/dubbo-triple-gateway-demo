@@ -12,12 +12,15 @@
 
 ## IDL 模式的组成（dubbo-proto-api 模块）
 
-- `src/main/proto/account.proto` / `storage.proto`：service + message 定义
+- `src/main/proto/account.proto` / `storage.proto` / `user.proto`：service + message 定义
 - `dubbo-maven-plugin`（3.3.0+，版本与 dubbo 核心一致）：compile 阶段根据 proto 生成
   - 普通接口 `AccountProtoService`（返回值风格，不是回调）
   - 基类 `DubboAccountProtoServiceTriple.AccountProtoServiceImplBase`
   - message 类 `DebitRequest/DebitResponse/...`
 - 依赖：`protobuf-java`（生成代码需要）；`dubbo`（ImplBase 引用 triple 类）
+- `user.proto` 的 `GetUsernamesByUserIds` 是"内部查询走 IDL"的示例：order-service
+  订单列表补用户名时批量调用（一次 RPC），names 与 user_ids 同序、空串表示用户不存在
+  （proto3 无 null，缺失语义要在注释里写成契约）
 
 ## 服务端（user-service / storage-service）
 

@@ -31,10 +31,21 @@
         <jjwt.version>0.12.6</jjwt.version>
         <skywalking-toolkit.version>9.6.0</skywalking-toolkit.version>
         <rocketmq-spring.version>2.3.5</rocketmq-spring.version>
+        <!-- 覆盖 rocketmq-client 5.3.1 传递引入的 grpc 1.73.0 -->
+        <grpc.version>1.83.1</grpc.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- gRPC 版本必须放在 dubbo-bom 之前：dubbo 的 BOM 也显式管理了 grpc（钉 1.73.0），
+                 dependencyManagement 先声明者优先，放后面会被 dubbo 压回去导致版本混用 -->
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-bom</artifactId>
+                <version>${grpc.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -69,9 +80,14 @@
                 <version>${seata.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.seata</groupId>
-                <artifactId>seata-core</artifactId>
-                <version>${seata.version}</version>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-starter-alibaba-seata</artifactId>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.seata</groupId>
+                        <artifactId>seata-spring-boot-starter</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.mybatis.spring.boot</groupId>

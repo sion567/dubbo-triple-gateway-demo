@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     login(payload) {
       this.token = payload.token
-      this.user = { username: payload.username, roles: payload.roles, perms: payload.perms }
+      this.user = {userId: payload.userId, username: payload.username, name: payload.name, roles: payload.roles, perms: payload.perms }
       localStorage.setItem(TOKEN_KEY, this.token)
       localStorage.setItem(USER_KEY, JSON.stringify(this.user))
     },

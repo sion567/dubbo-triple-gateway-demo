@@ -4,19 +4,23 @@
       <div class="card-header">
         <span>订单管理</span>
         <div>
-          <el-button type="warning" @click="quickOrder">⚡ 秒杀下单（MQ 削峰）</el-button>
-          <el-button type="primary" @click="dialog = true">下单</el-button>
+          <el-button v-if="!auth.isAdmin" type="warning" @click="quickOrder">⚡ 秒杀下单（MQ 削峰）</el-button>
+          <el-button v-if="!auth.isAdmin" type="primary" @click="dialog = true">下单</el-button>
         </div>
       </div>
     </template>
 
     <el-table :data="orders" v-loading="loading" border stripe>
-      <el-table-column prop="orderId" label="ID" width="70" />
-      <el-table-column prop="userId" label="用户ID" width="80" />
-      <el-table-column prop="productCode" label="商品编码" width="130" />
+      <el-table-column prop="orderid" label="ID" width="70" />
+      <el-table-column prop="username" label="用户名" width="100" />
+      <el-table-column prop="productcode" label="商品编码" width="130" />
       <el-table-column prop="product" label="商品" min-width="120" />
       <el-table-column prop="count" label="数量" width="70" />
-      <el-table-column prop="money" label="金额" width="100" />
+      <el-table-column prop="money" label="金额" width="100">
+        <template #default="{ row }">
+          {{ Number(row.money).toFixed(2) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
           <el-tag :type="row.status === 'SUCCESS' ? 'success' : row.status === 'INIT' ? 'warning' : 'info'">
@@ -37,7 +41,7 @@
   <el-dialog v-model="dialog" title="下单（Seata 分布式事务）" width="480">
     <el-form :model="form" label-width="90px">
       <el-form-item label="用户ID">
-        <el-input-number v-model="form.userId" :min="1" :max="3" />
+        <el-input-number v-model="form.userId" :min="2" :max="6" />
       </el-form-item>
       <el-form-item label="商品编码">
         <el-select v-model="form.productCode">
@@ -77,12 +81,15 @@ const loading = ref(false)
 const dialog = ref(false)
 const saving = ref(false)
 const fail = ref(false)
-const form = reactive({ userId: 1, productCode: 'iPhone15', product: 'iPhone 15', count: 1, price: 6999 })
+const form = reactive({ userId: auth.$id, productCode: 'P001', product: 'iPhone 15', count: 1, price: 6999 })
 
 async function load() {
   loading.value = true
   try {
-    orders.value = await request.get('/order/list')
+    // if (auth.isAdmin)
+      orders.value = await request.get('/order/list')
+    // else
+    //   orders.value = await request.get(`/user/getOrder/${auth.$id}`)
   } finally {
     loading.value = false
   }

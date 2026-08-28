@@ -52,6 +52,10 @@ spring.h2.console.enabled: true   # web 服务可用 /h2-console 访问，JDBC u
 
 2. **启动服务**（顺序无所谓）：dubbo-user-service、dubbo-storage-service、dubbo-order-service、dubbo-gateway
 
+   > 监控说明：服务已移除 Actuator（纯 Dubbo 无 Web 容器），观测走
+   > SkyWalking（http://localhost:8090）、Dubbo Admin（http://localhost:8095，root/root）、
+   > Dubbo QoS（user-service 22222 端口 `telnet` 后执行 `status`）
+
 3. **验证**：
 
    下单成功（正常提交，三个库同时落库）：

@@ -45,3 +45,6 @@ npm-debug.log*
 # ---- Maven ----
 .flattened-pom.xml
 dependency-reduced-pom.xml
+
+# 环境变量文件（包含敏感信息）
+.env

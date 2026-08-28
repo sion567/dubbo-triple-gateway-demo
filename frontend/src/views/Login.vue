@@ -4,18 +4,18 @@
       <h2 style="text-align: center; margin-top: 0">Dubbo Triple Gateway Demo</h2>
       <el-form :model="form" label-width="70px" @keyup.enter="doLogin">
         <el-form-item label="用户名">
-          <el-input v-model="form.username" placeholder="user / admin" />
+          <el-input v-model="form.username" placeholder="user2 / admin" />
         </el-form-item>
         <el-form-item label="密码">
           <el-input v-model="form.password" type="password" show-password
-                    placeholder="123456 / admin123" />
+                    placeholder="user2: 123456 / admin: admin123" />
         </el-form-item>
         <el-button type="primary" style="width: 100%" :loading="loading" @click="doLogin">
           登 录
         </el-button>
       </el-form>
       <el-alert style="margin-top: 16px" type="info" :closable="false"
-                title="user/123456（普通用户）  admin/admin123（管理员）" />
+                title="user2~user6/123456（普通用户）  admin/admin123（管理员）" />
     </el-card>
   </div>
 </template>
@@ -30,7 +30,7 @@ import { useAuthStore } from '../stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 const loading = ref(false)
-const form = reactive({ username: 'user', password: '123456' })
+const form = reactive({ username: 'user2', password: '123456' })
 
 async function doLogin() {
   if (!form.username || !form.password) {
@@ -39,10 +39,10 @@ async function doLogin() {
   }
   loading.value = true
   try {
-    const res = await request.post('/user/login', form)
+    const res = await request.post('/auth/login', form)
     if (res.code === 0 && res.token) {
       auth.login(res)
-      ElMessage.success(`欢迎，${res.username}`)
+      ElMessage.success(`欢迎，${res.name || res.username}`)
       router.push('/orders')
     } else {
       ElMessage.error(res.message || '登录失败')

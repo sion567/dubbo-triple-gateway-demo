@@ -19,8 +19,9 @@
 gateway SecurityWebFilterChain
   │ ② JwtAuthenticationWebFilter 验签(HS256) → 失败 401 JSON
   │ ③ 通过 → Authentication 进 Reactor Context；Authorization 头原样放行
-  ▼  HTTP/2（Triple 自动把 Header 转为 attachment）
-Dubbo Provider: ContextPropagationProviderFilter（同时处理两个来源）
+  ▼  HTTP/2（Triple RPC：Header 自动转 attachment；Triple REST：不转，
+  │    Provider 从 invocation 的 tri.http.request 直接读 HTTP Header）
+Dubbo Provider: ContextPropagationProviderFilter（同时处理多个来源）
   │ ④ attachment 里的原始 JWT 再验签 → SecurityContext(用户+角色+权限)
   │    token 存 RpcAuthHolder（供本服务调下游时继续透传）
   │ ⑤ XID 绑定 RootContext（Seata 分支事务）

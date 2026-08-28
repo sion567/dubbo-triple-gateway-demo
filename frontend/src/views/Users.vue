@@ -5,7 +5,7 @@
     </template>
 
     <el-table :data="users" v-loading="loading" border stripe>
-      <el-table-column prop="userId" label="用户ID" width="80" />
+      <el-table-column prop="userid" label="用户ID" width="80" />
       <el-table-column prop="name" label="姓名" width="120" />
       <el-table-column prop="username" label="登录账号" width="120" />
       <el-table-column label="角色" width="220">
@@ -18,18 +18,19 @@
       </el-table-column>
       <el-table-column label="余额（元）" width="140">
         <template #default="{ row }">
-          {{ row.money != null ? row.money.toFixed(2) : '-' }}
+          {{ row.money != null ? Number(row.money).toFixed(2) : '-' }}
         </template>
       </el-table-column>
-      <el-table-column prop="perms" label="权限点">
+      <el-table-column label="权限点" width="300">
         <template #default="{ row }">
           <el-tag v-for="p in row.perms || []" :key="p" type="info" size="small"
                   style="margin-right: 4px">{{ p }}</el-tag>
+          <span v-if="!row.perms?.length" style="color: #999">-</span>
         </template>
       </el-table-column>
     </el-table>
     <el-alert style="margin-top: 12px" type="info" :closable="false"
-              title="余额在账户库（seata_account），下单时经 Seata 全局事务扣减" />
+              title="余额在用户库（seata_account.user），下单时经 Seata 全局事务扣减" />
   </el-card>
 </template>
 

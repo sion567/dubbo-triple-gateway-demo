@@ -86,18 +86,40 @@ public class ContextPropagationProviderFilter implements Filter {
     }
 
     private String resolveToken(Invocation invocation) {
-        String raw = invocation.getAttachment(ContextPropagationConsumerFilter.AUTH_KEY);
-        if (raw == null) {
-            // 网关直转场景：HTTP Authorization header 自动转成的 attachment
-            raw = RpcContext.getServerAttachment()
-                    .getAttachment(ContextPropagationConsumerFilter.AUTH_KEY);
-        }
-        if (raw == null) {
-            raw = RpcContext.getServerAttachment().getAttachment("authorization");
-        }
+        String raw = firstNonNull(
+                invocation.getAttachment(ContextPropagationConsumerFilter.AUTH_KEY),
+                // 网关直转场景：HTTP Authorization header 转成的 attachment。
+                // HTTP/2 会统一小写，HTTP/1.1 可能保留原大小写，两种都兜住
+                attachment("authorization"),
+                attachment("Authorization"),
+                attachment(ContextPropagationConsumerFilter.AUTH_KEY),
+                // Triple REST 调用不会把 HTTP header 转 attachment（Dubbo 3.3.x 服务端无此逻辑），
+                // 但原始 HttpRequest 挂在 invocation 上，直接从 header 取
+                httpRequestHeader(invocation, "Authorization"));
         if (raw != null && raw.startsWith(BEARER_PREFIX)) {
             return raw.substring(BEARER_PREFIX.length());
         }
         return raw != null && !raw.isBlank() ? raw : null;
+    }
+
+    private String httpRequestHeader(Invocation invocation, String name) {
+        Object request = invocation.get("tri.http.request");
+        if (request instanceof org.apache.dubbo.remoting.http12.HttpRequest httpRequest) {
+            return httpRequest.header(name);
+        }
+        return null;
+    }
+
+    private String attachment(String key) {
+        return RpcContext.getServerAttachment().getAttachment(key);
+    }
+
+    private String firstNonNull(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isBlank()) {
+                return v;
+            }
+        }
+        return null;
     }
 }

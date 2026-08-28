@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option java_package = "com.example.proto";
+option java_multiple_files = true;
+option java_outer_classname = "UserProto";
+
+// 用户内部 RPC（IDL 模式，Triple/protobuf）：order -> user-service
+service UserProtoService {
+
+  // 批量查用户名；names 与 user_ids 同序，查不到的用户对应位置为空串
+  rpc GetUsernamesByUserIds(GetUsernamesByUserIdsRequest) returns (GetUsernamesByUserIdsResponse);
+}
+
+message GetUsernamesByUserIdsRequest {
+  repeated int64 user_ids = 1;
+}
+
+message GetUsernamesByUserIdsResponse {
+  repeated string names = 1;
+}

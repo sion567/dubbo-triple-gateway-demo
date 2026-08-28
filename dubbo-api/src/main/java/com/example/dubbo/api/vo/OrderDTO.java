@@ -1,12 +1,14 @@
 package com.example.dubbo.api.vo;
 
+import java.math.BigDecimal;
+
 public class OrderDTO {
     private Long orderId;
     private Long userId;
     private String product;
     private String productCode;
     private Integer count;
-    private Double price;
+    private BigDecimal price;
     private String status;
 
     public Long getOrderId() {
@@ -49,11 +51,11 @@ public class OrderDTO {
         this.count = count;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 

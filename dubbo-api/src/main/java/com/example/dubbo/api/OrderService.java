@@ -17,13 +17,7 @@ public interface OrderService {
     @PostMapping("/createOrder")
     String createOrder(@RequestBody OrderDTO order);
 
-    /**
-     * 管理端查询全部订单：需要 ROLE_ADMIN（由 ContextPropagationProviderFilter 重建的 SecurityContext 校验）。
-     */
-    @GetMapping("/admin/allOrders")
-    List<Map<String, Object>> getAllOrders();
-
-    /** 订单列表（登录即可看） */
+    /** 订单列表（角色不同返回不同：管理员返回全部，普通用户返回自己的） */
     @GetMapping("/list")
     List<Map<String, Object>> list();
 

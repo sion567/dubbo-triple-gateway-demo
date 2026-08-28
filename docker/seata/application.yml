@@ -1,0 +1,21 @@
+logging:
+  file:
+    path: /root/logs # 声明容器内部日志输出路径（必须配置，否则启动报错）
+
+seata:
+  # 1. 2.x 版本强制要求的安全 Token 密钥（微服务与 Server 握手鉴权用，可自定义）
+  security:
+    secret-keys:
+      secretKey: "seataPlatformSecretKeyTwelveBits"
+  # 2. 事务分组与集群映射关系（必须与您微服务客户端的配置保持一致）
+  server:
+    vgroup-mapping:
+      demo_tx_group: default # 将微服务的事务组 demo_tx_group 映射到本地集群 default
+  # 3. 明确声明不使用任何远程配置中心与注册中心
+  config:
+    type: file # 明确不使用配置中心
+  registry:
+    type: file # 明确不使用注册中心
+  # 4. 分布式事务会话数据的存储模式
+  store:
+    mode: file # 存储模式采用本地文件形式（单机测试最快，生产环境通常改为 db 存储）

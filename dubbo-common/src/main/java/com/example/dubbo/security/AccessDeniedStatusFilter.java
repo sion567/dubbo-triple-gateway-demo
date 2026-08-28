@@ -9,11 +9,13 @@ import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 
 /**
- * 403 映射：@PreAuthorize 拒绝时抛出的 AccessDeniedException（含 Spring Security 6 的
- * AuthorizationDeniedException 子类）默认会被 tri rest 包装成 500，
- * 本过滤器把它翻译成携带 403 状态码的 HttpStatusException，让客户端拿到明确的 403。
+ * 鉴权异常映射（默认都会被 tri rest 包装成 500）：
+ * - AccessDeniedException（含 AuthorizationDeniedException）→ 403，已登录但权限不足
+ * - AuthenticationCredentialsNotFoundException → 401，Provider 侧 SecurityContext 为空，
+ *   说明 token 没透传到或验签失败（透传链路断了），不是权限问题
  */
 @Activate(group = CommonConstants.PROVIDER, order = 10000)
 public class AccessDeniedStatusFilter implements Filter {
@@ -33,7 +35,13 @@ public class AccessDeniedStatusFilter implements Filter {
         if (ex == null) {
             return;
         }
-        if (unwrap(ex) instanceof AccessDeniedException denied) {
+        Throwable cause = unwrap(ex);
+        if (cause instanceof AuthenticationCredentialsNotFoundException) {
+            r.setException(new HttpStatusException(401, "Unauthorized: no Authentication "
+                    + "in SecurityContext — token missing or not propagated to provider", cause));
+            System.out.println("⛔ [AccessDeniedStatusFilter] 401: token 未透传到 Provider，"
+                    + "检查 Authorization attachment / JWT_SECRET 是否一致");
+        } else if (cause instanceof AccessDeniedException denied) {
             r.setException(new HttpStatusException(403, "Forbidden: "
                     + denied.getMessage(), denied));
             System.out.println("⛔ [AccessDeniedStatusFilter] 403: " + r.getException().getMessage());

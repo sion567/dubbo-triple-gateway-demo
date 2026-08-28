@@ -14,7 +14,7 @@
         <span />
         <div class="user-box">
           <el-tag :type="auth.isAdmin ? 'danger' : 'success'" size="small">
-            {{ auth.user?.username }}（{{ auth.isAdmin ? '管理员' : '普通用户' }}）
+            {{ auth.user?.username }}（{{ auth.user?.name }}）
           </el-tag>
           <el-button size="small" @click="logout">退出</el-button>
         </div>

@@ -8,7 +8,7 @@
     </template>
 
     <el-table :data="rows" v-loading="loading" border stripe>
-      <el-table-column prop="productCode" label="商品编码" width="200" />
+      <el-table-column prop="productcode" label="商品编码" width="200" />
       <el-table-column label="库存数量" width="140">
         <template #default="{ row }">
           <el-tag :type="row.count > 10 ? 'success' : 'danger'">{{ row.count }}</el-tag>
@@ -26,7 +26,7 @@
   <el-dialog v-model="dialog" :title="editCode ? `补货：${editCode}` : '新增商品'" width="420">
     <el-form :model="form" label-width="90px">
       <el-form-item label="商品编码">
-        <el-input v-model="form.productCode" :disabled="!!editCode" placeholder="如 iPhone15" />
+        <el-input v-model="form.productcode" :disabled="!!editCode" placeholder="如 iPhone15" />
       </el-form-item>
       <el-form-item :label="editCode ? '补货数量' : '初始库存'">
         <el-input-number v-model="form.count" :min="1" />
@@ -48,7 +48,7 @@ const rows = ref([])
 const loading = ref(false)
 const dialog = ref(false)
 const editCode = ref('')
-const form = reactive({ productCode: '', count: 10 })
+const form = reactive({ productcode: '', count: 10 })
 
 async function load() {
   loading.value = true
@@ -60,8 +60,8 @@ async function load() {
 }
 
 function openSave(row) {
-  editCode.value = row?.productCode || ''
-  form.productCode = row?.productCode || ''
+  editCode.value = row?.productcode || ''
+  form.productcode = row?.productcode || ''
   form.count = 10
   dialog.value = true
 }
@@ -74,8 +74,8 @@ async function save() {
 }
 
 async function del(row) {
-  await ElMessageBox.confirm(`确认删除 ${row.productCode}？`, '提示', { type: 'warning' })
-  await request.delete(`/storage/delete/${row.productCode}`)
+  await ElMessageBox.confirm(`确认删除 ${row.productcode}？`, '提示', { type: 'warning' })
+  await request.delete(`/storage/delete/${row.productcode}`)
   ElMessage.success('已删除')
   load()
 }

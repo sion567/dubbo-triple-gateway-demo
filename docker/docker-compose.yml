@@ -1,38 +1,69 @@
 services:
-  # ---------------- RocketMQ 消息队列（削峰填谷） ----------------
+  # ---------------- RocketMQ 消息队列 ----------------
   rocketmq-namesrv:
-    image: apache/rocketmq:5.3.1
+    image: apache/rocketmq:5.5.0
     container_name: demo-rocketmq-namesrv
+    # 镜像以 rocketmq 用户运行，但 /home/rocketmq/logs 在镜像内不存在，
+    # 卷挂载点会被 docker 创建为 root 所有，rocketmq 用户无法建目录写日志（FileNotFoundException）
+    user: root
     command: sh mqnamesrv
     environment:
       JAVA_OPT_EXT: "-Xms256m -Xmx256m"
+      TZ: Asia/Shanghai
     ports:
       - "9876:9876"
+    volumes:
+      # 挂载 NameServer 日志目录
+      - rocketmq-namesrv-logs:/home/rocketmq/logs
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/localhost/9876' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
   rocketmq-broker:
-    image: apache/rocketmq:5.3.1
+    image: apache/rocketmq:5.5.0
     container_name: demo-rocketmq-broker
+    user: root   # 同 namesrv：避免日志/存储卷的 root 挂载点权限问题
     depends_on:
-      - rocketmq-namesrv
+      rocketmq-namesrv:
+        condition: service_healthy
     command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/conf/broker.conf
     environment:
       JAVA_OPT_EXT: "-Xms256m -Xmx512m"
+      TZ: Asia/Shanghai
     ports:
       - "10909:10909"   # VIP channel
       - "10911:10911"   # 主端口
       - "10912:10912"
     volumes:
       - ./rocketmq/broker.conf:/home/rocketmq/conf/broker.conf:ro
+      # 挂载 Broker 日志目录
+      - rocketmq-broker-logs:/home/rocketmq/logs
+      # 挂载 Broker 消息存储目录
+      - rocketmq-broker-store:/home/rocketmq/store
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
 
   # ---------------- SkyWalking 链路追踪 ----------------
   skywalking-oap:
-    image: apache/skywalking-oap-server:10.1.0
+    image: apache/skywalking-oap-server:10.1.0  # apache/skywalking-oap-server:10.4.0
     container_name: demo-skywalking-oap
     environment:
-      # sample 用 H2 内存存储，重启即清；生产换 Elasticsearch/BanyanDB
+      # 从 2025 年开始，Apache SkyWalking 官方已经永久移除了 H2 作为存储选项。
+      # demo 用 H2 内存存储，重启即清；生产换 Elasticsearch/BanyanDB
       SW_STORAGE: h2
       SW_HEALTH_CHECKER: default
       JAVA_OPTS: -Xms512m -Xmx512m
+      TZ: Asia/Shanghai
     ports:
       - "11800:11800"   # gRPC，Java Agent 上报端口
       - "12800:12800"   # REST，UI 查询端口
@@ -41,71 +72,139 @@ services:
       interval: 15s
       timeout: 5s
       retries: 20
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
 
   skywalking-ui:
     image: apache/skywalking-ui:10.1.0
     container_name: demo-skywalking-ui
     depends_on:
-      - skywalking-oap
+      skywalking-oap:
+        condition: service_healthy # 等待 OAP 真正就绪再启动
     environment:
       SW_OAP_ADDRESS: http://skywalking-oap:12800
+      TZ: Asia/Shanghai
     ports:
       - "8090:8080"     # 浏览器访问 http://localhost:8090（8080 已被 nacos 控制台占用）
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
+  # ---------------- Nacos 服务注册与配置中心 ----------------
   nacos:
     image: nacos/nacos-server:v3.2.4-slim
     container_name: demo-nacos
     environment:
+      # demo使用单机内嵌 Derby 存储；生产换 MySQL 存储
+      # ⚠️ 重要：Nacos 2.4+/3.x 不再有默认 nacos/nacos 账号！
+      # 首次启动后必须先访问 http://localhost:8080/nacos 在初始化页给 nacos 用户设置密码
+      # （建议设为 nacos，与各服务 yml/registry.conf 中的默认账号一致），
+      # 否则所有客户端鉴权失败，报 "server status check failed / User not found"
       MODE: standalone
-      # 单机内嵌 Derby 存储，sample 用途；生产换 MySQL 存储
-      # v3 注意：NACOS_AUTH_TOKEN 必须是 Base64 字符串（原文 ThisIsMyCustomSecretKey0123456789）
       NACOS_AUTH_ENABLE: "true"
-      NACOS_AUTH_TOKEN: "VGhpc0lzTXlDdXN0b21TZWNyZXRLZXkwMTIzNDU2Nzg="
+      NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN} # 从 .env 读取
       NACOS_AUTH_IDENTITY_KEY: serverIdentity
-      NACOS_AUTH_IDENTITY_VALUE: security
+      NACOS_AUTH_IDENTITY_VALUE: ${NACOS_AUTH_IDENTITY_VALUE} # 从 .env 读取
       JVM_XMS: 256m
       JVM_XMX: 256m
+      TZ: Asia/Shanghai
+      NACOS_FUNCTION_MODE: microservice   # 不加载 AI 模块，节省资源
+      NACOS_AUTH_ADMIN_ENABLE: true    # 控制 Admin API 是否鉴权
+      NACOS_AUTH_CONSOLE_ENABLE: true  # 控制控制台是否鉴权
+      NACOS_SERVER_IP: ${NACOS_IP:-127.0.0.1}
     ports:
       - "8080:8080"   # 控制台 UI（v3 控制台与主服务分离，http://localhost:8080/nacos）
       - "8848:8848"   # 主端口：HTTP/OpenAPI
       - "9848:9848"   # gRPC（客户端 2.x/3.x 都会用，端口 = 8848 + 1000）
-    # slim 镜像可能不带 curl/wget，若 healthcheck 一直 unhealthy 可删除本段，
-    # 并把 seata-server 的 depends_on 改回 condition: service_started
+    volumes:
+      # 将容器内的 /home/nacos/data 挂载到宿主机的命名卷 nacos-data
+      # 这样 Nacos 内嵌的 Derby 数据库数据就能持久化了
+      - nacos-data:/home/nacos/data
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -o /dev/null http://localhost:8080/nacos/ || wget -q -O /dev/null http://localhost:8080/nacos/ || exit 1"]
+      test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/localhost/8080' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
 
-  seata-server:
-    image: seataio/seata-server:2.0.0
-    container_name: demo-seata-server
+  # ---------------- Dubbo Admin 服务治理控制台 ----------------
+  dubbo-admin:
+    image: apache/dubbo-admin:0.6.0
+    container_name: demo-dubbo-admin
     depends_on:
       nacos:
         condition: service_healthy
     environment:
-      # 注册到 Nacos 时对外暴露的 IP。
-      # 默认 127.0.0.1：适用于「docker 跑基础设施 + 应用跑宿主机」的标准 sample 场景，
-      # 客户端从 Nacos 拿到的 127.0.0.1:8091 会命中 compose 映射出来的端口。
-      # 若应用与 docker 不在同一台机器，用环境变量覆盖：SEATA_IP=<宿主机IP> docker compose up -d
-      SEATA_IP: "${SEATA_IP:-127.0.0.1}"
-      SEATA_PORT: "8091"
-      STORE_MODE: "file"
+      # 注册中心/配置中心/元数据中心都指向 compose 内的 nacos
+      admin.registry.address: "nacos://nacos:8848?username=nacos&password=nacos&namespace=public"
+      admin.config-center: "nacos://nacos:8848?username=nacos&password=nacos&namespace=public"
+      admin.metadata-report.address: "nacos://nacos:8848?username=nacos&password=nacos&namespace=public"
+      admin.admin.root.password: "root"
+      TZ: Asia/Shanghai
     ports:
-      - "8091:8091"
-      - "7091:7091"   # Web 控制台
+      - "8095:38080"    # 镜像 Web 端口是 38080（Dubbo 端口 30880）；浏览器访问 http://localhost:8095（root/root）
+
+  # ---------------- Seata 分布式事务 ----------------
+  seata-server:
+    image: apache/seata-server:2.7.0
+    container_name: demo-seata-server
+    environment:
+      # 1. 宿主机真实 IP（确保你的微服务能访问到这个 IP）
+      SEATA_IP: ${SEATA_IP:-172.26.205.13}
+      # 2. 明确指定事务通信 Netty 端口
+      SEATA_PORT: "8091"
+      SPRING_MAIN_WEB_APPLICATION_TYPE: "none"
+    ports:
+      - "8091:8091" # 核心事务通信端口
     volumes:
-      - ./seata/registry.conf:/seata-server/resources/registry.conf:ro
-      - ./seata/file.conf:/seata-server/resources/file.conf:ro
+      - ./seata/application.yml:/seata-server/resources/application.yml:ro
       - seata-session:/seata-server/sessionStore
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  seata-console:
+    image: apache/seata-naming-server:2.7.0.jdk25
+    container_name: demo-seata-console
+    ports:
+      - "7091:7091" # 暴露网页端口
+    environment:
+      - SERVER_PORT=7091
+      - SEATA_NAMING_SERVER_PORT=48091
 
 volumes:
+  rocketmq-namesrv-logs:
+  rocketmq-broker-logs:
+  rocketmq-broker-store:
+  nacos-data:
   seata-session:
 
 # 业务库说明：三个服务均使用 H2 内存库（MySQL 兼容模式），启动时自动建表灌数据，
 # 无需外部 MySQL。如需改回 MySQL：服务 pom 换回 mysql-connector-j，
 # yml 数据源改回 jdbc:mysql://...，并用 docs/sql/seata/*.sql 建库。
 #
-# 一键启动（本机跑应用）：
-#   docker compose up -d
-#   然后依次启动 dubbo-user-service / dubbo-storage-service / dubbo-order-service / dubbo-gateway
+# ======================= 正确的启动时序（重要！） =======================
+# Nacos 2.4+/3.x 不再有默认 nacos/nacos 账号，且 seata-server/dubbo-admin
+# 启动时就要连 Nacos——它们在账号初始化之前启动会导致注册失败且不自动重试。
+#
+#   ① docker compose up -d                  # 全部容器起来（此时 seata/admin 注册失败是预期的）
+#   ② 浏览器打开 http://172.26.205.13:8080/nacos
+#      在初始化页给 nacos 用户设置密码（建议设为 nacos，与各服务配置一致）
+#   ③ docker compose restart seata-server dubbo-admin   # 补注册（关键步骤，别漏）
+#   ④ 启动 Java 服务：dubbo-user-service / dubbo-storage-service / dubbo-order-service / dubbo-gateway
+#
+# ⚠️ WSL 注意：172.26.205.13 是 WSL 虚拟网卡 IP，重启 Windows/WSL 后可能变化。
+# 变了之后需要同步修改：各服务 application.yml 的地址默认值、compose 的 SEATA_IP、
+# docker/rocketmq/broker.conf 的 brokerIP1（已全部参数化，也可用环境变量覆盖）。
+# =====================================================================

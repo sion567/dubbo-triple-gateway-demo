@@ -8,15 +8,15 @@ import org.apache.dubbo.rpc.protocol.tri.rest.filter.RestExtension;
 
 import java.util.function.Supplier;
 
-@Activate(group = "provider", order = -1000)
-public class SecurityFilterV2 implements Supplier<Filter>, RestExtension {
+@Activate
+public class SecurityFilter implements Supplier<Filter>, RestExtension {
     private Filter filter;
 
-    public SecurityFilterV2() {
-        System.out.println("------SecurityFilterV2 constructor------");
+    public SecurityFilter() {
+        System.out.println("------SecurityFilter constructor------");
     }
 
-    public SecurityFilterV2(FrameworkModel frameworkModel) {
+    public SecurityFilter(FrameworkModel frameworkModel) {
         SpringExtensionInjector injector = SpringExtensionInjector.get(frameworkModel.defaultApplication());
         this.filter = injector.getInstance(JwtSecurityFilter.class, null);
 

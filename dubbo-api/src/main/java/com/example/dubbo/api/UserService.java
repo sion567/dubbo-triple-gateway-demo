@@ -16,13 +16,11 @@ public interface UserService {
     @GetMapping("/getOrder/{id:\\d+}")
     Map<String, Object> getUserWithOrders(@PathVariable("id") Long userId);
 
-    /**
-     * 登录：校验用户名密码，签发 JWT（含角色）。成功返回 token，失败返回 code=401。
-     */
-    @PostMapping("/login")
-    Map<String, Object> login(@RequestBody LoginRequest request);
-
     /** 用户列表（含角色与余额，管理员） */
     @GetMapping("/list")
     Map<String, Object> list();
+
+    /** 根据用户名查 userId，供其他服务 RPC 调用 */
+    @GetMapping("/userId/{username}")
+    Long getUserIdByUsername(@PathVariable("username") String username);
 }

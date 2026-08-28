@@ -6,7 +6,7 @@ spring:
       username: ${NACOS_USER:nacos}
       password: ${NACOS_PWD:nacos}
       discovery:
-        server-addr: ${nacos.address:localhost:8848}
+        server-addr: ${nacos.address:172.26.205.13:8848}
     gateway:
       server:
         webflux:
@@ -14,7 +14,7 @@ spring:
             - id: user_service_route
               uri: lb://dubbo-user-service
               predicates:
-                - Path=/user/**
+                - Path=/auth/login,/user/**
 
             - id: order_service_route
               uri: lb://dubbo-order-service
