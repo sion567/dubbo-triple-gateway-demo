@@ -1,6 +1,6 @@
-package com.example.dubbo.storage;
+package com.example.dubbo.storage.api.impl;
 
-import com.example.dubbo.api.StorageService;
+import com.example.dubbo.storage.api.StorageService;
 import com.example.dubbo.storage.mapper.StorageMapper;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.security.access.prepost.PreAuthorize;

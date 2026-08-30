@@ -1,11 +1,13 @@
-package com.example.dubbo.order;
+package com.example.dubbo.order.api.impl;
 
 import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.example.dubbo.api.OrderService;
-import com.example.dubbo.api.UserService;
-import com.example.dubbo.api.vo.OrderDTO;
+import com.example.dubbo.order.OrderTxService;
+import com.example.dubbo.order.QuickOrderProducer;
+import com.example.dubbo.order.api.OrderService;
+import com.example.dubbo.order.api.vo.OrderDTO;
 import com.example.dubbo.order.mapper.OrderMapper;
+import com.example.dubbo.user.api.UserServiceApi;
 import com.example.proto.GetUsernamesByUserIdsRequest;
 import com.example.proto.UserProtoService;
 import org.apache.dubbo.config.annotation.DubboReference;
@@ -27,9 +29,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @DubboReference(check = false)
-    private UserService userService;
+    private UserServiceApi userServiceApi;
 
-    @DubboReference(check = true) // 用 check = true 保证应用启动时“内功”是通的，用 startupProbe 保证应用启动时不会被外部“外力”误杀，两者结合才能做到真正的生产级稳定。
+    @DubboReference(check = true)
     private UserProtoService userProtoService;
 
     @Override
@@ -103,7 +105,7 @@ public class OrderServiceImpl implements OrderService {
             return withUsernames(orderMapper.selectAll());
         }
         String username = auth.getName();
-        Long userId = userService.getUserIdByUsername(username);
+        Long userId = userServiceApi.getUserIdByUsername(username);
         if (userId == null) {
             return Collections.emptyList();
         }

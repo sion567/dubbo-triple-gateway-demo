@@ -1,6 +1,6 @@
 package com.example.dubbo.order;
 
-import com.example.dubbo.api.vo.OrderDTO;
+import com.example.dubbo.order.api.vo.OrderDTO;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.stereotype.Component;

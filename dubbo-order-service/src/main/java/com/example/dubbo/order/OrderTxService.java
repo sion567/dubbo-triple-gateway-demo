@@ -1,6 +1,6 @@
 package com.example.dubbo.order;
 
-import com.example.dubbo.api.vo.OrderDTO;
+import com.example.dubbo.order.api.vo.OrderDTO;
 import com.example.dubbo.order.mapper.OrderMapper;
 import com.example.proto.AccountProtoService;
 import com.example.proto.DebitRequest;

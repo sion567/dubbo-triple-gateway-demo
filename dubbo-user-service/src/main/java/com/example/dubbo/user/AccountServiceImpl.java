@@ -1,7 +1,7 @@
 package com.example.dubbo.user;
 
-import com.example.dubbo.api.AccountService;
-import com.example.dubbo.api.vo.LoginRequest;
+import com.example.dubbo.user.api.AccountService;
+import com.example.dubbo.user.api.vo.LoginRequest;
 import com.example.dubbo.security.JwtUtil;
 import com.example.dubbo.user.mapper.AccountMapper;
 import com.example.dubbo.user.mapper.UserMapper;

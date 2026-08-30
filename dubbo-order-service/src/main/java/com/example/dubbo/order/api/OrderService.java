@@ -1,6 +1,6 @@
-package com.example.dubbo.api;
+package com.example.dubbo.order.api;
 
-import com.example.dubbo.api.vo.OrderDTO;
+import com.example.dubbo.order.api.vo.OrderDTO;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,5 +35,4 @@ public interface OrderService {
     /** 删除订单（管理员） */
     @DeleteMapping("/delete/{id}")
     Map<String, Object> delete(@PathVariable("id") Long id);
-
 }

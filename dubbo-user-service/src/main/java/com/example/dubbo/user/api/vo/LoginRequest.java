@@ -1,4 +1,4 @@
-package com.example.dubbo.api.vo;
+package com.example.dubbo.user.api.vo;
 
 public class LoginRequest {
     private String username;

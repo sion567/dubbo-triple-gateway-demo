@@ -42,12 +42,6 @@
             <artifactId>dubbo-common</artifactId>
             <version>1.0.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.example</groupId>
-            <artifactId>dubbo-proto-api</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-
         <!-- Seata AT：数据源自动代理 -->
         <dependency>
             <groupId>io.seata</groupId>

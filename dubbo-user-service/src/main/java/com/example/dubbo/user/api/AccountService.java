@@ -1,6 +1,6 @@
-package com.example.dubbo.api;
+package com.example.dubbo.user.api;
 
-import com.example.dubbo.api.vo.LoginRequest;
+import com.example.dubbo.user.api.vo.LoginRequest;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;

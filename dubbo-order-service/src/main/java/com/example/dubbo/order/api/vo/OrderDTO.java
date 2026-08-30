@@ -1,4 +1,4 @@
-package com.example.dubbo.api.vo;
+package com.example.dubbo.order.api.vo;
 
 import java.math.BigDecimal;
 

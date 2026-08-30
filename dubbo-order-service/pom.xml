@@ -67,7 +67,7 @@
         <!-- IDL(Protobuf) 内部 RPC stub -->
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>dubbo-proto-api</artifactId>
+            <artifactId>dubbo-user-service</artifactId>
             <version>1.0.0</version>
         </dependency>
     </dependencies>
