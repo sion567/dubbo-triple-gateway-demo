@@ -1,6 +1,7 @@
 package com.example.dubbo.user;
 
 import com.example.dubbo.user.mapper.UserMapper;
+import com.example.proto.AccountProtoService;
 import com.example.proto.DebitRequest;
 import com.example.proto.DebitResponse;
 import com.example.proto.DubboAccountProtoServiceTriple;
@@ -9,9 +10,10 @@ import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.math.BigDecimal;
+import java.util.concurrent.CompletableFuture;
 
 @DubboService
-public class AccountProtoImpl extends DubboAccountProtoServiceTriple.AccountProtoServiceImplBase {
+public class AccountProtoImpl implements AccountProtoService {
 
     private final UserMapper userMapper;
 
@@ -40,5 +42,10 @@ public class AccountProtoImpl extends DubboAccountProtoServiceTriple.AccountProt
                 .setSuccess(true)
                 .setRemaining(remaining != null ? remaining.doubleValue() : 0)
                 .build();
+    }
+
+    @Override
+    public CompletableFuture<DebitResponse> debitAsync(DebitRequest request) {
+        return CompletableFuture.completedFuture(debit(request));
     }
 }

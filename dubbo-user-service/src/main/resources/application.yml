@@ -55,13 +55,16 @@ seata:
 
 dubbo:
   application:
+    metadata-type: remote
     name: dubbo-user-service
     logger: slf4j
+    qos-enable: true
     qos-port: 22222
   protocol:
     name: dubbo
     port: 20882
-    ext-protocol: tri
+    ext-protocol: tri        # 单端口多协议，官方推荐方向
+    preferred-protocol: tri  # 消费端优先使用 triple
   scan:
     base-packages: com.example.dubbo.user
   registry:

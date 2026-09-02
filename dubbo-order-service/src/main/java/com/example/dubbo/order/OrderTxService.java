@@ -36,8 +36,9 @@ public class OrderTxService {
     }
 
     /**
-     * 跨 3 个库的分布式事务（Seata AT）：写订单 → RPC 扣余额 → RPC 扣库存。
+     * 下单：跨 3 个库的分布式事务（Seata AT）：写订单 → RPC 扣余额 → RPC 扣库存。
      * status=FAIL 时抛异常触发全局回滚。
+     * 注意：seata.enabled=true 且 Seata Server 运行时才生效。
      */
     @GlobalTransactional(name = "create-order", rollbackFor = Exception.class)
     public String doCreate(OrderDTO order) {
@@ -45,10 +46,10 @@ public class OrderTxService {
 
         int count = order.getCount() == null ? 1 : order.getCount();
         BigDecimal money = order.getPrice() == null ? BigDecimal.ZERO : order.getPrice().multiply(BigDecimal.valueOf(count));
-
-        orderMapper.insert(order.getUserId(), order.getProductCode(),
-                order.getProduct(), count, money, "INIT");
-        System.out.println("📦 [OrderTxService] 订单已写入 seata_order.t_orders");
+        order.setCount(count);
+        order.setStatus("INIT");
+        orderMapper.insert(order);
+        System.out.println("📦 [OrderTxService] 订单已写入 seata_order.t_orders, orderId=" + order.getOrderId());
 
         DebitResponse debit = accountProtoService.debit(DebitRequest.newBuilder()
                 .setUserId(order.getUserId()).setMoney(money.doubleValue()).build());

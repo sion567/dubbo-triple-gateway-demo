@@ -18,13 +18,16 @@ spring:
 
 dubbo:
   application:
+    metadata-type: remote
     name: dubbo-storage-service
     logger: slf4j
-    qos-enable: false
+    qos-enable: true
+    qos-port: 22221
   protocol:
     name: dubbo
-    port: 20883
+    port: 20881
     ext-protocol: tri
+    preferred-protocol: tri
   scan:
     base-packages: com.example.dubbo.storage
   registry:

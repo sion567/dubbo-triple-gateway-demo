@@ -7,18 +7,17 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+
+import com.example.dubbo.order.api.vo.OrderDTO;
 
 public interface OrderMapper {
 
     @Insert("INSERT INTO t_orders(user_id, product_code, product, count, money, status) " +
-            "VALUES(#{userId}, #{productCode}, #{product}, #{count}, #{money}, #{status})")
+            "VALUES(#{userId}, #{productCode}, #{product}, #{count}, #{price}, #{status})")
     @Options(useGeneratedKeys = true, keyProperty = "orderId", keyColumn = "id")
-    int insert(@Param("userId") Long userId, @Param("productCode") String productCode,
-               @Param("product") String product, @Param("count") int count,
-               @Param("money") BigDecimal money, @Param("status") String status);
+    int insert(OrderDTO order);
 
     @Select("SELECT id AS orderId, user_id AS userId, product_code AS productCode, product, count, money, status " +
             "FROM t_orders WHERE user_id = #{userId}")

@@ -13,6 +13,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 public class StorageServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(StorageServiceApplication.class, args);
-        System.out.println("StorageService Start (dubbo port: 20883)");
+        System.out.println("StorageService Start, Dubbo Port: 20881");
     }
 }

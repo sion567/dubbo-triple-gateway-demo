@@ -75,4 +75,19 @@ public class SecurityConfig {
         DataBuffer buffer = response.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8));
         return response.writeWith(Mono.just(buffer));
     }
+
+//    private Converter<Jwt, Mono<AbstractAuthenticationToken>> converter() {
+//        return jwt -> {
+//            var roles = jwt.getClaimAsStringList("roles");
+//            var auths = roles == null ? List.<GrantedAuthority>of()
+//                    : roles.stream().map(r -> new SimpleGrantedAuthority("ROLE_" + r)).toList();
+//            return Mono.just(new JwtAuthenticationToken(jwt, auths));
+//        };
+//    }
+//
+//    @Bean
+//    public ReactiveJwtDecoder jwtDecoder() {
+//        return NimbusReactiveJwtDecoder.withSecretKey(
+//                Keys.hmacShaKeyFor(secret.getBytes())).build();
+//    }
 }

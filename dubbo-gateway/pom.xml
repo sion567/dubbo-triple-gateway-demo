@@ -76,5 +76,11 @@
             <groupId>org.apache.skywalking</groupId>
             <artifactId>apm-toolkit-logback-1.x</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.3</version>  <!-- 0.12.x 就用上面写法 -->
+        </dependency>
     </dependencies>
 </project>

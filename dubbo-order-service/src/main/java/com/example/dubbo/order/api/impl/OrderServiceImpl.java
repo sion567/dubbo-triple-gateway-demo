@@ -4,13 +4,11 @@ import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.example.dubbo.order.OrderTxService;
 import com.example.dubbo.order.QuickOrderProducer;
+import com.example.dubbo.order.UserServiceClient;
 import com.example.dubbo.order.api.OrderService;
 import com.example.dubbo.order.api.vo.OrderDTO;
 import com.example.dubbo.order.mapper.OrderMapper;
-import com.example.dubbo.user.api.UserServiceApi;
 import com.example.proto.GetUsernamesByUserIdsRequest;
-import com.example.proto.UserProtoService;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
 import java.util.*;
 
@@ -21,18 +19,19 @@ public class OrderServiceImpl implements OrderService {
     private final OrderTxService orderTxService;
     private final QuickOrderProducer quickOrderProducer;
 
+    private final UserServiceClient userServiceClient;
+
     public OrderServiceImpl(OrderMapper orderMapper, OrderTxService orderTxService,
-                            QuickOrderProducer quickOrderProducer) {
+                            QuickOrderProducer quickOrderProducer,
+                            UserServiceClient userServiceClient) {
         this.orderMapper = orderMapper;
         this.orderTxService = orderTxService;
         this.quickOrderProducer = quickOrderProducer;
+
+        this.userServiceClient = userServiceClient;
     }
 
-    @DubboReference(check = false)
-    private UserServiceApi userServiceApi;
 
-    @DubboReference(check = true)
-    private UserProtoService userProtoService;
 
     @Override
     @SentinelResource(value = "getOrdersByUserId", blockHandler = "handleGetOrdersBlock")
@@ -105,7 +104,7 @@ public class OrderServiceImpl implements OrderService {
             return withUsernames(orderMapper.selectAll());
         }
         String username = auth.getName();
-        Long userId = userServiceApi.getUserIdByUsername(username);
+        Long userId = userServiceClient.getUserServiceApi().getUserIdByUsername(username);
         if (userId == null) {
             return Collections.emptyList();
         }
@@ -135,7 +134,7 @@ public class OrderServiceImpl implements OrderService {
                 .build();
         List<String> names;
         try {
-            names = userProtoService.getUsernamesByUserIds(request).getNamesList();
+            names = userServiceClient.getUserProtoService().getUsernamesByUserIds(request).getNamesList();
         } catch (Exception e) {
             System.err.println("❌ [OrderService] 批量查询用户名失败: " + e.getMessage());
             return orders;

@@ -81,7 +81,7 @@ const loading = ref(false)
 const dialog = ref(false)
 const saving = ref(false)
 const fail = ref(false)
-const form = reactive({ userId: auth.$id, productCode: 'P001', product: 'iPhone 15', count: 1, price: 6999 })
+const form = reactive({ userId: auth.user?.userId, productCode: 'iPhone15', product: 'iPhone 15', count: 1, price: 6999 })
 
 async function load() {
   loading.value = true
@@ -89,7 +89,7 @@ async function load() {
     // if (auth.isAdmin)
       orders.value = await request.get('/order/list')
     // else
-    //   orders.value = await request.get(`/user/getOrder/${auth.$id}`)
+    //   orders.value = await request.get(`/user/getOrder/${auth.user?.userId}`)
   } finally {
     loading.value = false
   }
