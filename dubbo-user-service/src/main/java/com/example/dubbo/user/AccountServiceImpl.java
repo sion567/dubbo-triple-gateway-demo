@@ -6,12 +6,20 @@ import com.example.dubbo.security.JwtUtil;
 import com.example.dubbo.user.mapper.AccountMapper;
 import com.example.dubbo.user.mapper.UserMapper;
 import org.apache.dubbo.config.annotation.DubboService;
+import org.apache.dubbo.remoting.http12.rest.OpenAPI;
+import org.apache.dubbo.remoting.http12.rest.Operation;
 
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+@OpenAPI(
+        infoTitle = "用户认证服务",
+        infoDescription = "提供用户登录、JWT签发、身份校验等认证相关功能",
+        infoVersion = "v1",
+        docDescription = "用户服务 REST API 文档"
+)
 @DubboService
 public class AccountServiceImpl implements AccountService {
 
@@ -23,6 +31,7 @@ public class AccountServiceImpl implements AccountService {
         this.accountMapper = accountMapper;
     }
 
+    @Operation(description = "用户登录：校验用户名和密码，成功返回JWT令牌，失败返回401")
     @Override
     public Map<String, Object> login(LoginRequest request) {
         String username = request.getUsername();

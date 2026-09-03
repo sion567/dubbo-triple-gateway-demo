@@ -31,6 +31,10 @@
             <artifactId>dubbo-sentinel-spring-boot-starter</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-rest-openapi</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.example</groupId>

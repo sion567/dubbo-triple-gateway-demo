@@ -18,6 +18,9 @@ public class UserServiceApplication {
     }
 }
 
+//http://localhost:20882/dubbo/openapi 可打开内置的 Swagger UI 界面
+
+
 //Invoke-WebRequest http://localhost:22222/ls -UseBasicParsing | Select-Object -ExpandProperty Content
 //As Provider side:
 //        +----------------------------------------------------------------------------------+---------------------+

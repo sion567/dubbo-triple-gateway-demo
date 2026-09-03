@@ -4,7 +4,6 @@ import com.example.dubbo.user.mapper.UserMapper;
 import com.example.proto.AccountProtoService;
 import com.example.proto.DebitRequest;
 import com.example.proto.DebitResponse;
-import com.example.proto.DubboAccountProtoServiceTriple;
 import io.seata.core.context.RootContext;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.security.access.prepost.PreAuthorize;

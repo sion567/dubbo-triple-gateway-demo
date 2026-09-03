@@ -65,6 +65,10 @@ dubbo:
     port: 20882
     ext-protocol: tri        # 单端口多协议，官方推荐方向
     preferred-protocol: tri  # 消费端优先使用 triple
+    triple:
+      rest:
+        openapi:
+          enabled: true
   scan:
     base-packages: com.example.dubbo.user
   registry:
